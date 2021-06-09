@@ -10,21 +10,21 @@
 #   syn.login(<username>, <password>, rememberMe=True)
 #
 # Your credentials will be saved after which you may run this script with no credentials.
-# 
+#
 # Author: chris.bare
 #
 ###############################################################################
 
 
 import synapseclient
-import synapseclient.utils as utils
-from synapseclient.exceptions import *
+import synapseclient.core.utils as utils
+from synapseclient.core.exceptions import *
 from synapseclient import Activity
 from synapseclient import Project, Folder, File
 from synapseclient import Evaluation, Submission, SubmissionStatus
 from synapseclient import Wiki
 from synapseclient import Column
-from synapseclient.dict_object import DictObject
+from synapseclient.core.models.dict_object import DictObject
 from synapseclient.annotations import from_submission_status_annotations
 import synapseutils as synu
 
@@ -110,8 +110,8 @@ def update_single_submission_status(status, add_annotations, force=False):
         publicAddedAnnotations = dict()
     else:
         privateAddedAnnotations = {each['key']:each['value'] for annots in add_annotations for each in add_annotations[annots] if annots not in ['scopeId','objectId'] and each['isPrivate'] == True}
-        publicAddedAnnotations = {each['key']:each['value'] for annots in add_annotations for each in add_annotations[annots] if annots not in ['scopeId','objectId'] and each['isPrivate'] == False} 
-    #If you add a private annotation that appears in the public annotation, it switches 
+        publicAddedAnnotations = {each['key']:each['value'] for annots in add_annotations for each in add_annotations[annots] if annots not in ['scopeId','objectId'] and each['isPrivate'] == False}
+    #If you add a private annotation that appears in the public annotation, it switches
     if sum([key in publicAddedAnnotations for key in privateAnnotations]) == 0:
         pass
     elif sum([key in publicAddedAnnotations for key in privateAnnotations]) >0 and force:
@@ -142,7 +142,7 @@ def update_single_submission_status(status, add_annotations, force=False):
 
     status.annotations = priv
     return(status)
-    
+
 def update_submissions_status_batch(evaluation, statuses):
     """
     Update statuses in batch. This can be much faster than individual updates,

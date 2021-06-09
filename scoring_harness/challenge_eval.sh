@@ -17,4 +17,4 @@ source /home/shared_mnik_xdo/miniconda2/bin/activate /home/shared_mnik_xdo/minic
 #--------------------
 # Score submissions
 #--------------------
-python $script_dir/challenge.py -u "xdoan" -u "mnikolov" --send-messages --notifications score --all >> $script_dir/log/score.log 2>&1
+python $script_dir/challenge.py -u "bgrande" -u "mnikolov" --send-messages --notifications score --all >> $script_dir/log/score.log 2>&1
