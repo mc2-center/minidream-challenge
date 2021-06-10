@@ -766,8 +766,7 @@ submission ID, and check the mini-DREAM scoreboards to see the
 results.
 
 ```{r}
-library(synapser)
-synLogin(rememberMe = TRUE, silent = TRUE)
+synLoginSecure()  # You might be prompted for your username and password
 submission <- submit_module_answers(module = 2)
 ```
 

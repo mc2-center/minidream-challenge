@@ -1,5 +1,7 @@
 library(yaml)
 library(jsonlite)
+library(getPass)
+library(synapser)
 
 create_module0_submission <- function() {
   submission_filename <- paste(Sys.getenv("USER"), "activity-0.yml", sep = "_")
@@ -206,4 +208,28 @@ create_dummy_files <- function(module, submission_folder) {
         print(syn_id) 
       }
     )
+}
+
+synLoginSecure <- function() {
+  tryCatch({
+    synLogin(silent = TRUE)
+    message("Logging into Synapse using remembered credentials...")
+  }, error = function(e) {
+    username <- getPass("Your Synapse Username")
+    password <- getPass("Your Synapse Password")
+    tryCatch({
+      synLogin(username, password, rememberMe = TRUE, silent = TRUE)
+      message("Remembering Synapse credentials for future logins...")
+    }, error = function(e) {
+      if (grepl("You are not logged in", e)) {
+        message(paste(
+          "You might have made a typo in your username or password.",
+          "Try logging in again by re-running synLoginSecure(). Note that",
+          "your Synapse account is separate from your RStudio account."
+        ))
+      } else {
+        print(paste(e))
+      }
+    })
+  })
 }
