@@ -84,16 +84,16 @@ Now that you've seen how to run code in an R Notebook chunk, you're ready to go 
 
 This is a small preview of the challenge exercises that we'll include at the end of each activity. You'll be prompted to write some code and submit an answer to the challenge question. Your submission will get "scored" (or at least checked), and the results will be reported within a few minutes.
 
-**QUESTION:** What's my (James) birthday?
+**QUESTION:** What is Bruno's birthday?
 
-Enter your best guess of my birthday. For a bonus, you can guess my age too.
+Enter your best guess of Bruno's birthday. For a bonus, you can guess his age too.
 
 ```{r}
 # format your guess as 'MM/DD'
-my_bday_guess <- "11/01"
+my_bday_guess <- "06/15"
 
 # just give a round number for this one
-my_age_guess <- 60
+my_age_guess <- 42
 ```
 
 
