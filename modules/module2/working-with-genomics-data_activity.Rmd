@@ -1,7 +1,7 @@
 ---
 title: "Working with genomics data"
 author: "Andrew Gentles"
-date: "June 14, 2018"
+date: "June 22, 2019"
 output: html_notebook
 editor_options: 
   chunk_output_type: inline
@@ -9,8 +9,9 @@ editor_options:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-data_dir <- "/home/shared/data"
-scripts_dir <- "/home/shared/R"
+
+data_dir <- "/home/rstudio/shared/data"
+scripts_dir <- "/home/rstudio/shared/R"
 source(file.path(scripts_dir, "submission_helpers.R"))
 ```
 
@@ -42,12 +43,6 @@ Anytime you see an R command in the form `keyword()`, that represents a function
 names(pson_expr_tpm_df)
 ```
 
-The `str()` command is one of the most useful R commands — it tells you the *structure* of a variable or object in R. 
-
-```{r}
-str(pson_expr_tpm_df)
-```
-
 Another useful command is `head()`. This basically tells R to "cut the head off" of my table or matrix and only show me those rows. The default number of rows for `head()` is 6, but you can change this if you want. 
 
 ```{r}
@@ -77,7 +72,7 @@ We can use *indexing* to examine the first 5 rows and 5 columns — here for the
 pson_expr_tpm_df[1:5, 1:5]
 ```
 
-We saw how big the matrix was from the `str()` command, but can find it another way with the `dim()`, which returns two numbers indicating rows and columns. 
+We can find how big the matrix is with the `dim()` command, which returns two numbers indicating rows and columns. 
 
 ```{r}
 dim(pson_expr_tpm_df)
@@ -101,7 +96,7 @@ Take a moment to look at the information you just downloaded. Does it have the s
 
 ```
 
-In this case they are (thanks, James!) but in many cases there will be things missing, they'll be in the wrong order, etc. So we would have to merge these two data frames together. This can be done with the **`merge()`** command which is like a SQL database query command if you are familiar with those. For now let's only keep the rows from the expression table (`pson_expr_tpm_df`) corresponding to the rows from the table of gene information (`gene_df`) and put it in a new data frame called `pson_expr_tpm_df2`.
+In this case they are (thanks, James Eddy!) but in many cases there will be things missing, they'll be in the wrong order, etc. So we would have to merge these two data frames together. This can be done with the **`merge()`** command which is like a SQL database query command if you are familiar with those. For now let's only keep the rows from the expression table (`pson_expr_tpm_df`) corresponding to the rows from the table of gene information (`gene_df`) and put it in a new data frame called `pson_expr_tpm_df2`.
 
 ```{r}
 pson_expr_tpm_df2 <- merge(x = gene_df, y = pson_expr_tpm_df, 
@@ -114,7 +109,7 @@ What would have been the result of swapping the `gene_df` and `pson_expr_tpm_df`
 The `"biotype"` column is not very useful — they are all protein coding so let's ditch it:
 
 ```{r}
-pson_expr_tpm_df2[, "entrez"] <- NULL
+pson_expr_tpm_df2[, 2] <- NULL
 pson_expr_tpm_df2[1:5, 1:9] # view a few more columns this time
 ```
 
@@ -136,7 +131,7 @@ There are some other minor differences in how we work with data frames and matri
 colnames(pson_tpm_mat)
 ```
 
-TPM stands for "Transcripts per Million." There are many ways of summarizing RNA-seq expression levels. See Lior Pachter's detailed explanation if you want to delve into it more: https://liorpachter.wordpress.com/2014/04/30/estimating-number-of-transcripts-from-rna-seq-measurements-and-why-i-believe-in-paywall/. Lior is very entertaining and informative. Each column in the expression data *should* add up to 1,000,000.
+TPM stands for "Transcripts per Million." There are many ways of summarizing RNA-seq expression levels. See Lior Pachter's detailed explanation if you want to delve into it more: https://liorpachter.wordpress.com/2014/04/30/estimating-number-of-transcripts-from-rna-seq-measurements-and-why-i-believe-in-paywall/. Lior is one of the foremost experts on RNA-seq analysis, and is always informative to read. Each column in the expression data *should* add up to 1,000,000.
 
 ```{r}
 colSums(pson_tpm_mat)
@@ -215,15 +210,8 @@ plot(ecdf(speed_cor_mat))
 grid() # included dashed gridlines
 ```
 
-By chance some things would be non-zero. A visual way to check this is with a quantile-quantile plot.
 
-```{r}
-qqnorm(speed_cor_mat)
-qqline(speed_cor_mat)
-grid()
-```
-
-We could also "fit" a normal distribution (bell curve) and plot it on top of the histogram.
+We could  "fit" a normal distribution (bell curve) and plot it on top of the histogram.
 
 ```{r}
 speed_cor_mean <- mean(speed_cor_mat, na.rm = TRUE)
@@ -367,10 +355,10 @@ You're now ready to submit the prediction. Just run the chunk below, a file with
 
 ```{r}
 synLoginSecure()  # You might be prompted for your username and password
-submission <- submit_module_answers(module = 1)
+submission <- submit_module_answers(module = 2)
 ```
 
-Congrats — you’ve reached the end of **Module 1**! You can now return to the **mini-DREAM Challenge** site on Synapse.
+Congrats — you've reached the end of **Module 2**! You can now return to the **mini-DREAM Challenge** site on Synapse.
 
 ---
 

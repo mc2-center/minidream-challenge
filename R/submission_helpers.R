@@ -17,8 +17,8 @@ create_module0_submission <- function() {
   submission_filename
 }
 
-create_module1_submission <- function() {
-  submission_filename <- paste(Sys.getenv("USER"), "activity-1.yml", sep = "_")
+create_module2_submission <- function() {
+  submission_filename <- paste(Sys.getenv("USER"), "activity-2.yml", sep = "_")
   
   gene <<- my_gene
   delta <<- my_delta
@@ -36,8 +36,8 @@ create_module1_submission <- function() {
   submission_filename
 }
 
-create_module2_submission <- function() {
-  submission_filename <- paste(Sys.getenv("USER"), "activity-2.yml", sep = "_")
+create_module2_old_submission <- function() {
+  submission_filename <- paste(Sys.getenv("USER"), "activity-2-old.yml", sep = "_")
   
   distance_metric <<- my_distance_metric
   cluster_method <<- my_cluster_method
