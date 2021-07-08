@@ -36,8 +36,8 @@ create_module2_submission <- function() {
   submission_filename
 }
 
-create_module2_old_submission <- function() {
-  submission_filename <- paste(Sys.getenv("USER"), "activity-2-old.yml", sep = "_")
+create_module3_submission <- function() {
+  submission_filename <- paste(Sys.getenv("USER"), "activity-3.yml", sep = "_")
   
   distance_metric <<- my_distance_metric
   cluster_method <<- my_cluster_method
@@ -55,8 +55,8 @@ create_module2_old_submission <- function() {
   submission_filename
 }
 
-create_module3_submission <- function() {
-  submission_filename <- paste(Sys.getenv("USER"), "activity-3.yml", sep = "_")
+create_module3_old_submission <- function() {
+  submission_filename <- paste(Sys.getenv("USER"), "activity-3-old.yml", sep = "_")
   
   pc1_receptor <<- my_pc1_receptor
   tripleneg_met_association <<- my_tripleneg_met_association
