@@ -88,10 +88,10 @@ def score(submission):
     robjects.r("source('%s')" % filePath)
     scoring_func = robjects.r('score_submission')
 
-    if moduleNo == 6:
-        entity_annots = submission.entity['annotations']
-        with open(submission.filePath, 'w') as f:
-            f.write(entity_annots['yaml'][0])
+    # if moduleNo == 6:
+    #     entity_annots = submission.entity['annotations']
+    #     with open(submission.filePath, 'w') as f:
+    #         f.write(entity_annots['yaml'][0])
 
     results = scoring_func(submission.filePath)
     annotations = {key:value[0] for key, value in zip(results.names, results)}

@@ -4,65 +4,45 @@ library(glue)
 library(rprojroot)
 
 
-root_dir <- find_root(is_rstudio_project, thisfile())
-data_dir <- file.path(root_dir, "data")
-
 score_submission <- function(submission_filename) {
-  goldstandard_file <- file.path(data_dir, "clutchforce_mean-data.yml")
-  goldstandard <- yaml.load_file(goldstandard_file)
-  goldstandard_df <- as.tibble(goldstandard)
-  answers <- yaml.load_file(submission_filename)
-
-  cs_s <- summary(lm(goldstandard$csMean ~ answers$clutchState))
-  cs_sse <- sum((goldstandard$csMean - answers$clutchState)^2)
-  answers$cs_sse <- sprintf("%0.4f", cs_sse)
-  answers$cs_rmse <- sprintf("%0.3f", sqrt(mean(cs_s$residuals^2)))
   
-  cs_check_df <- goldstandard_df %>% 
-    mutate(
-      cs_upper = csMean + csSD, 
-      cs_lower = csMean - csSD,
-      cs_test = answers$clutchState, 
-      cs_in_sd = cs_test >= cs_lower & cs_test <= cs_upper,
-      cs_in_range = cs_test >= csMin & cs_test <= csMax
-    )
+  answers <- 
+  	yaml.load_file(submission_filename) %>% 
+    map(str_trim)
   
-  sp_s <- summary(lm(goldstandard$subPosMean ~ answers$substratePosition))
-  sp_sse <- sum((goldstandard$subPosMean - answers$substratePosition)^2)
-  answers$sp_sse <- sprintf("%0.4f", sp_sse)
-  answers$sp_rmse <- sprintf("%0.3f", sqrt(mean(sp_s$residuals^2)))
+  get_comment <- function(answer, expected, lower_bound, upper_bound) {
+    actual <- as.numeric(answer)
+    if (isTRUE(all.equal(actual, expected))) {
+      comment <- "Nailed it!"
+    } else if (actual >= lower_bound & actual <= upper_bound) {
+      comment <- "Close enough!"
+    } else if (actual < lower_bound) {
+      comment <- glue("Hmm, {actual} is an underestimate")
+    } else if (actual > upper_bound) {
+      comment <- glue("Hmm, {actual} is an overestimate")
+    } else {
+      comment <- "Something unexpected happened"
+    }
+    comment
+  }
   
-  sp_check_df <- goldstandard_df %>% 
-    mutate(
-      sp_upper = subPosMean + subPosSD, 
-      sp_lower = subPosMean - subPosSD, 
-      sp_test = answers$substratePosition, 
-      sp_in_sd = sp_test >= sp_lower & sp_test <= sp_upper,
-      sp_in_range = sp_test >= subPosMin & sp_test <= subPosMax
-    )
+  answers["nc_bound_final_comment"] <- 
+    get_comment(answers$nc_bound_final, 68.2, 65, 70)
   
-  msg_1 <- glue(
-    "{cs_sd} of your simulated data points for number of bound ",
-    "clutches and {sp_sd} of substrate position points were ",
-    "within one standard deviation of the mean values from our ",
-    "100 simulations. We expect lots of variation from run to run, ",
-    "so that's not necessarily good or bad.",
-    cs_sd = sprintf("%0.2f%%", mean(cs_check_df$cs_in_sd) * 100),
-    sp_sd = sprintf("%0.2f%%", mean(sp_check_df$sp_in_sd) * 100)
-  )
+  answers["time_half_comment"] <- 
+    get_comment(answers$time_half, 0.63, 0.6, 0.7)
   
-  msg_2 <- glue(
-    "{cs_ir} of your data points number of bound clutches and {sp_ir} ",
-    "of substrate position points were within the full range of values ",
-    "observed across our 100 simulations. Does that look better?",
-    cs_ir = sprintf("%0.2f%%", mean(cs_check_df$cs_in_range) * 100),
-    sp_ir = sprintf("%0.2f%%", mean(sp_check_df$sp_in_range) * 100)
-  )
+  answers["unbound_freq_comment"] <- 
+    get_comment(answers$unbound_freq, 6.7, 5, 10)
   
-  answers["comment"] <-paste(msg_1, msg_2)
+  answers["mforce_mean_comment"] <- 
+    get_comment(answers$mforce_mean, 21, 20, 22)
   
-  answers$clutchState <- NULL
-  answers$substratePosition <- NULL
+  answers["unbound_freq_deform_comment"] <- 
+    get_comment(answers$unbound_freq_deform, 0.085, 0.07, 0.1)
+  
+  answers["mforce_mean_deform_comment"] <- 
+    get_comment(answers$mforce_mean_deform, 80.8, 75, 85)
 
   answers
 }
