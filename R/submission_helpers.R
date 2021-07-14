@@ -76,6 +76,27 @@ create_module3_submission <- function() {
 #   submission_filename
 # }
 
+create_module4_submission <- function() {
+  submission_filename <- paste(Sys.getenv("USER"), "activity-4.yml", sep = "_")
+  
+  model_gene <<- my_model_gene
+  gene_relationship <<- my_gene_relationship
+  gene_significance <<- my_gene_significance
+  model_judgement <<- my_model_judgement
+  prediction <<- my_prediction
+  
+  answers <- list(
+    model_gene = model_gene, 
+    gene_relationship = gene_relationship,
+    gene_significance = gene_significance,
+    model_judgement = model_judgement,
+    prediction = prediction
+  )
+  
+  write_yaml(answers, submission_filename)
+  submission_filename
+}
+
 create_module5_submission <- function() {
   submission_filename <- paste(Sys.getenv("USER"), "activity-5.yml", sep = "_")
   
@@ -98,27 +119,6 @@ create_module5_submission <- function() {
   write_yaml(answers, submission_filename)
   submission_filename
 }
-
-# create_module5_old_submission <- function() {
-#   submission_filename <- paste(Sys.getenv("USER"), "activity-5-old.yml", sep = "_")
-  
-#   model_gene <<- my_model_gene
-#   gene_relationship <<- my_gene_relationship
-#   gene_significance <<- my_gene_significance
-#   model_judgement <<- my_model_judgement
-#   prediction <<- my_prediction
-  
-#   answers <- list(
-#     model_gene = model_gene, 
-#     gene_relationship = gene_relationship,
-#     gene_significance = gene_significance,
-#     model_judgement = model_judgement,
-#     prediction = prediction
-#   )
-  
-#   write_yaml(answers, submission_filename)
-#   submission_filename
-# }
 
 create_module6_submission <- function() {
   submission_filename <- paste(Sys.getenv("USER"), "activity-6.yml", sep = "_")
