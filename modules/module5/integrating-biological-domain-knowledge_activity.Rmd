@@ -1,7 +1,7 @@
 ---
 title: "Module 5: Integrating Biological Knowledge"
-author: "Diana Murray"
-date: "July 30, 2020"
+author: "Kamrun Begum and Diana Murray"
+date: "July 12, 2021"
 output: html_notebook
 editor_options: 
   chunk_output_type: inline
@@ -12,6 +12,7 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 
 data_dir <- "/home/rstudio/shared/data"
+
 scripts_dir <- "/home/rstudio/shared/R"
 source(file.path(scripts_dir, "submission_helpers.R"))
 ```
@@ -19,23 +20,24 @@ source(file.path(scripts_dir, "submission_helpers.R"))
 # About this activity
 
 ## Enrichment analysis
-We will use the R package **clusterProfiler** to perform enrichment analysis of GO annotations for sets of genes we think may be related to motility. We started this analysis with Andrew in **Module 1**. We know from experience that we most likely do not need to write our own code to perform our analyses. But how do we know where to find trustworthy code?
+We will use the R package **clusterProfiler** to perform enrichment analysis of GO annotations for sets of genes we think may be related to motility. We started this analysis with Andrew in **Module 2**. 
 
-Another package we could use is **gprofiler2**.  You can learn how to use this package in a [**great Nature Protocols paper**](https://pubmed.ncbi.nlm.nih.gov/30664679/).
+We know from experience that we most likely do not need to write our own code to perform the analyses. But how do we know where to find trustworthy code?
 
 ## Bioconductor for R packages like `clusterProfiler`
-The clusterProfiler package is maintained through [**Bioconductor**](https://bioconductor.org/), an open-source/open-development platform for bioinformatics tools in R. A large community of professionals supports the development, maintenance, and use of Bioconductor. 
+The clusterProfiler package is maintained through [**Bioconductor**](https://bioconductor.org/), an open-source/open-development platform for bioinformatics tools in R. A large community of professionals supports the development, maintenance, and use of Bioconductor. Most of the packages available on Bioconductor are available on the github platform as well, but Bioconductor provides more comprehensive community support.
 
+There are a number of ways to [install Bioconductor packages into your local RStudio environment](https://bioconductor.org/install/).
 
-If you're interested, there are a number of ways to [install Bioconductor packages into your local RStudio environment](https://bioconductor.org/install/).
+At the top of the [Bioconductor page for clusterProfiler](https://bioconductor.org/packages/release/bioc/html/clusterProfiler.html), there are some metrics that describe how widely used and trustworthy the package is — e.g., its download profile (rank = 36/2041, in top 2% of downloaded packages), the support activity (most posted questions received answers), and a multi-platform check report ("all"). clusterProfiler is also supported by a couple of publications from [20212](https://www.ncbi.nlm.nih.gov/pubmed/22455463) and [2021](https://pubmed.ncbi.nlm.nih.gov/22455463/). It is also [available on github](https://guangchuangyu.github.io/software/clusterProfiler/). Overall, clusterProfiler looks like a solid package.
 
-At the top of the [Bioconductor page for clusterProfiler](http://bioconductor.org/packages/release/bioc/html/clusterProfiler.html), there are some metrics that describe how widely used and trustworthy the package is — e.g., its download profile (rank = 40/1905, in top 2% of downloaded packages), the support activity (most posted questions received answers), and a multi-platform check report ("all"). clusterProfiler is also supported by a [publication](https://www.ncbi.nlm.nih.gov/pubmed/22455463). It is also [available on github](https://guangchuangyu.github.io/software/clusterProfiler/). Overall, clusterProfiler looks like a solid package.
+Available are a manual with extensive documentation and **Vignettes**, which include examples of implementing clusterProfiler. The requirement of Vignettes is an outstanding feature of Bioconductor packages.  We will use only a few of the functions included in clusterProfiler. If you want to learn more about the package, you can work through [the clusterProfiler Vignettes](https://bioconductor.org/packages/devel/bioc/vignettes/clusterProfiler/inst/doc/clusterProfiler.html). 
 
-Available are a manual and **Vignettes**, which include examples of implementing clusterProfiler. The requirement of Vignettes is an outstanding feature of Bioconductor packages.  We will use only a few of the functions included in clusterProfiler. If you want to learn more about the package, you can work through [the clusterProfiler Vignettes](https://bioconductor.org/packages/devel/bioc/vignettes/clusterProfiler/inst/doc/clusterProfiler.html). 
+Another package we could use is **gprofiler2**.  You can learn how to use this package from a [**great Nature Protocols paper**](https://pubmed.ncbi.nlm.nih.gov/30664679/).
 
 
 ## Bioconductor packages for this activity
-1) [clusterProfiler](https://www.bioconductor.org/packages//2.10/bioc/html/clusterProfiler.html) for enrichment analysis
+1) [clusterProfiler](https://bioconductor.org/packages/release/bioc/html/clusterProfiler.html) for functional enrichment (or overrepresentation) analysis
 2) [org.Hs.eg.db](https://bioconductor.org/packages/release/data/annotation/html/org.Hs.eg.db.html) for help with gene annotation information https://bioconductor.org/packages/release/data/annotation/html/org.Hs.eg.db.html
 3) [DOSE for Disease Ontology Semantics and Enrichment Analysis](https://bioconductor.org/packages/release/bioc/html/DOSE.html)
 
@@ -51,16 +53,17 @@ library(DOSE)
 
 
 ## Loading & formatting data
-We revist the work we did in **Module 1** for loading and manipulating the PS-ON cell line expression and motility data.
+We revisit the work we did in **Module 2** for loading and manipulating the PS-ON cell line expression and motility data.
 
-Run the following chunk to load the data and to match (`merge`) with gene information.
+Run the following chunk to load the data and to match (`merge()`) with gene information.
 
 ```{r}
 load(file.path(data_dir, "pson_expr_tpm_df.RData"))
 load(file.path(data_dir, "pson_expr_gene_info.RData"))
 load(file.path(data_dir, "pson_motility_tidy_df.RData"))
 
-pson_expr_tpm_df2 <- merge(           # We are adding gene information
+# We add gene information by merging the expression and id data frames
+pson_expr_tpm_df2 <- merge(           
   x = gene_df, y = pson_expr_tpm_df,
   by.x = "gene_id", by.y = "gene_id"
 )
@@ -70,18 +73,21 @@ pson_expr_tpm_df2[1:5,1:10]           # We use `indexing` to inspect
 
 We saw in earlier modules that there are many ways to identify genes. For example, human KRAS has the Ensembl id: "ENSG00000133703"; the hugo gene ID: KRAS; the UniProt ID: P01116; and the Entez ID: 3845. 
 
-We will use the Ensembl `gene_id` (column 1) in our enrichment analysis, and we'll keep the HUGO `symbol` (column 3) so we can easily identify genes with their common names.
+We will use the Ensembl `gene_id` (column 1) in our enrichment analysis, and we'll keep the gene name `symbol` (column 3) so we can easily identify genes with their common names.
 
 The following chunk creates the expression matrix for 18K+ genes across the ~60 cell lines.
 
 ```{r}
-gene_symbol<-pson_expr_tpm_df2$symbol  # We keep the gene symbols 
+gene_symbol<-pson_expr_tpm_df2$symbol  # We'll reserve the gene symbols 
 
-pson_tpm_mat <- as.matrix(pson_expr_tpm_df2[, -c(1:5)])
+# Remove the first 5 columns from the merged data frame and convert to a matrix
+pson_tpm_mat <- as.matrix(pson_expr_tpm_df2[, -c(1:5)])  
 
+# We rename the matrix to remind ourselves with gene id we're using for analysis
 pson_tpm_mat_Ensembl <- pson_tpm_mat
 rownames(pson_tpm_mat_Ensembl) <- pson_expr_tpm_df2$gene_id
 
+# Log-transformed expression matrix
 pson_logtpm_mat_Ensembl <- log2(1 + pson_tpm_mat_Ensembl)
 
 pson_logtpm_mat_Ensembl[1:5, 1:5]   # The expression matix has 
@@ -92,7 +98,7 @@ pson_logtpm_mat_Ensembl[1:5, 1:5]   # The expression matix has
 
 ## Hyaluronic acid
 
-We are interested in cell motility, so we are considering aspects of cell measurements in addition to gene expression, like cell speed. Here is a cartoon depiction of a cell in its biological environment. Extracellular matrix proteins include collagen (light blue), hyaluronic acid (dark blue), and fibronectin (green). These proteins are used in vitro as substrates on which to measure cell properties. In this activity, we'll look at cell speed measurements on the **hyaluronic acid substrate**.
+We are interested in cell motility, so we are considering aspects of cell measurements, like cell speed, in addition to gene expression. Here is a cartoon depiction of a cell in its biological environment. Extracellular matrix proteins include collagen (light blue), hyaluronic acid (dark blue), and fibronectin (green). These proteins are used in vitro as substrates on which to measure cell properties. In this activity, we'll look at cell speed measurements on the **hyaluronic acid substrate**.
 
 ```{r}
 library(imager)
@@ -102,8 +108,15 @@ substrate_img<-load.image(file.path(data_dir,"substrate.JPG"))
 plot(substrate_img,axes=FALSE)
 ```
 
+Before we collect cell speed data, let's remind ourselves what the PSON physical data includes.
 
-This code chunk loads the cell speed data and selects the two breast cancer cell lines. We did this with Andrew in **Module 1**. 
+```{r}
+View(pson_motil_tidy_df)
+```
+
+Cell speed is in um/hr, and there are measurements for different human cell lines on different substrates.
+
+This code chunk extracts the cell speed data for the two breast cancer cell lines on the hyaluronic acid collagen substrate. We did this with Andrew in **Module 2**. 
 
 ```{r}
 cell_speeds_df <- subset(pson_motil_tidy_df, summary_metric == "speed_um_hr")
@@ -113,16 +126,17 @@ hyal_coll_df <- subset(
   experimentalCondition == "HyaluronicAcid Collagen"
 )
 
+# We want to work with the samples that also have expression data
 samples_w_expr <- match(hyal_coll_df$sample, colnames(pson_logtpm_mat_Ensembl))
 
 hyal_coll_logtpm_mat_Ensembl <- pson_logtpm_mat_Ensembl[, samples_w_expr]
 
-which(hyal_coll_df$diagnosis == "Breast Cancer")
-
 hyal_coll_df$cellLine[which(hyal_coll_df$diagnosis == "Breast Cancer")]
+
+breast_cancer_cols<-which(hyal_coll_df$diagnosis == "Breast Cancer")
 ```
 
-Last time we considered T-47D as a model for less agressive breast cancer and MDA-MB-231 as a model for more agressive breast cancer.
+Last time, we considered T-47D as a model for less aggressive breast cancer and MDA-MB-231 as a model for more aggressive breast cancer.
 
 ---
 
@@ -132,12 +146,12 @@ In this chunk, we create a data frame that contains the ranked difference in exp
 
 ```{r}
 breast_logtpm_df <- data.frame(
-  rownames(hyal_coll_logtpm_mat_Ensembl), 
-  gene_symbol,
-  hyal_coll_logtpm_mat_Ensembl[, c(7, 9)]
+  rownames(hyal_coll_logtpm_mat_Ensembl),  # Ensembl gene ids are required for our analysis
+  gene_symbol,     # We include gene symbols since these are meaningful to us
+  hyal_coll_logtpm_mat_Ensembl[, breast_cancer_cols]
 )
 
-names(breast_logtpm_df) <- c("Ensembl", "hugo", "slower", "faster")
+names(breast_logtpm_df) <- c("Ensembl", "symbol", "slower", "faster")
 
 breast_logtpm_df$delta <- breast_logtpm_df[, "faster"] -
   breast_logtpm_df[, "slower"]
@@ -148,7 +162,7 @@ rownames(breast_logtpm_df) <- NULL
 head(breast_logtpm_df, 10)
 ```
 
-The genes at the top of this list show much greater expression in the *faster* cell line (MDA-MB-231); if we had ordered the list by `decreasing = FALSE`, then we would have negative delta values at the top and be looking at genes with greater expression in the *slower* cell line (T-47D).
+The genes at the top of this list show much greater expression in the *faster* cell line (MDA-MB-231); if we had ordered the list by `decreasing = FALSE`, then we would have negative delta values at the top and be looking at genes with greater expression in the *slower* cell line (T-47D).  (You can try this!)
 
 Since we are interested only in `delta` (expression in the faster cell line - expression in the slower cell line), we'll remove the columns for 'slower' and 'faster`.
 
@@ -157,9 +171,10 @@ breast_logtpm_df2 <- breast_logtpm_df[, -c(3,4)]
 
 ```
 
-In this chunk, we set up the gene list we need for performing the GO enrichment analysis.
 
-`geneList_ensembl` is a ranked list of "delta" values (the difference in expression for each gene in the "fast" versus "slow" condition) with the Ensembl gene IDs as names. `clusterProfiler` likes to work with Ensembl IDs because they are stable, unique, and unambiguous.  `geneList_symbol` is the same ranked list but annotated with HUGO gene symbols for our reference.
+Now we'll set up the gene list we need for performing the GO enrichment analysis.
+
+`geneList_ensembl` is a ranked list of "delta" values (the difference in expression for each gene in the "fast" versus "slow" condition) with the Ensembl gene IDs as names. `clusterProfiler` likes to work with Ensembl IDs because they are stable, unique, and unambiguous.  `geneList_symbol` is the same ranked list but annotated with gene symbols for our reference.
 
 ```{r, warning=FALSE}
 geneList_ensembl <- breast_logtpm_df2[, 3]
@@ -168,19 +183,21 @@ names(geneList_ensembl) <- breast_logtpm_df2[, 1]
 geneList_symbol <- breast_logtpm_df2[, 3]
 names(geneList_symbol) <- breast_logtpm_df2[, 2]
 
+# Top genes faster in MDA-MB-231 than in T-47D 
 head(geneList_symbol,20)
+# Top genes faster in T-47D than in MDA-MB-231 
 tail(geneList_symbol,20)
 ```
 
 ## Vimentin and keratin in motility
 
-With Andrew in **Module 1**, we inspected the genes at the top and bottom of this ranked list. Andrew noted that some of the genes most differentially expressed were lotto winners in terms of potential association with motility!
+With Andrew in **Module 2**, we inspected the genes at the top and bottom of this ranked list. Andrew noted that some of the genes most differentially expressed were lotto winners in terms of potential association with motility!
 
 For example VIM, at the very top of the list codes for the protein vimentin, and KRT23, near the bottom codes for the protein keratin. 
 
 This image comes from the paper, ["Vimentin induces changes in cell shape, motility, and adhesion during the epithelial to mesenchymal transition"](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2874471). 
 
-Cells that express vimentin intermediate filaments (VIF) but not keratin intermediate filaments (KIF) are elongated in shape and more motile (panel A), whereas cells with KIF and not VIF are round and undergo fewer changes in morphology and position (panel B).
+Cells that express vimentin intermediate filaments (VIF) but not keratin intermediate filaments (KIF) are elongated in shape and more motile (panel A), whereas cells with KIF and not VIF are round and undergo fewer changes in morphology and position (panel B).  This indicates that vimentin plays a role in cell migration and more aggressive cancer.
 
 ```{r}
 VIF_KIF_img<-load.image(file.path(data_dir,"VIF_KIF.JPG"))
@@ -199,7 +216,9 @@ abline(v = c(-4, 4), lty = 2)
 
 Again, somewhat arbitrary, but we'll go ahead and use 4 as our cutoff for `delta` in both directions.
 
-We create two sets of genes: 1) Those with "delta" less than or equal to -4 (genes with higher expression in the slow cell line (T-47D)), and 2) those with "delta" greater than or equal to +4 (genes with higher expression in the fast cell line (MDA-MB-231)).
+We create two sets of genes: 1) Those with "delta" less than or equal to -4 (genes with higher expression in the slow cell line (T-47D)), and 2) those with "delta" greater than or equal to +4 (genes with higher expression in the fast cell line (MDA-MB-231)).  
+
+Remember that the expression values are log2-transformed.  So genes with `delta` = 4 differentially expressed by 16-fold.
 
 
 ```{r}
@@ -215,14 +234,22 @@ length(gene_ensembl_neg)
 
 ```
 
+These are relatively short lists to work with.  
+
 
 ## Gene Ontology (GO) enrichment
 
-The **clusterProfiler** package provides functions for performing a wide range of enrichment analyses.  We will focus on **`enrichGO`**, which annotates the genes in our list with GO terms and then looks for GO annotations that are significantly over- or under-represented.
+The **clusterProfiler** package provides functions for performing a wide range of enrichment analyses.  We will focus on **`enrichGO`**, which annotates the genes in our list with GO (Gene Ontology) terms and then looks for GO annotations that are significantly over- or under-represented.
 
-Look at the arguments to the function. Note that the `pAdjustMethod` is set to `"BH"`. The Benjamini-Hochberg (BH) procedure decreases the false discovery rate in analysis. Adjusting the rate helps to control for the fact that sometimes small p-values (less than 5%) happen by chance, which could lead us to incorrectly rejecting the true null hypotheses. In other words, the BH Procedure helps us avoid Type I errors (false positives).
+```{r}
+args(enrichGO)
+```
 
-What will we use as our reference gene set or "universe"?  Why this list and not another?
+Look at the arguments to the function. Note that the `pAdjustMethod` is set to `"BH"`. The Benjamini-Hochberg (BH) procedure decreases the false discovery rate in analysis. Adjusting the rate helps to control for the fact that sometimes small p-values (less than 5%) happen by chance, which could lead us to incorrectly reject the true null hypotheses. In other words, the BH Procedure helps us avoid Type I errors (false positives).
+
+`ont` is short for **ontology** and can be one of "BP", "MF", or "CC".
+
+What should we use as our reference gene set or "universe"?  
 
 Check out the documentation for the `enrichGO()` function to learn a bit more about how it works.
 
@@ -230,10 +257,10 @@ Check out the documentation for the `enrichGO()` function to learn a bit more ab
 ?enrichGO
 ```
 
-We'll first look for enriched **GO biological process terms** with the argument `ont = "BP"`. `ont` stands for ontology. 
+We'll first look for enriched **GO biological process terms** with the argument `ont = "BP"`. 
 Running the function will take a few moments.
 
-We'll look at the top entries of our results.  Scroll horizontally through the columns and connect the output with the information we obtained Tuesday with the [online GO Panther enrichment tool](http://geneontology.org/). 
+Examine the top entries of our results by scrolling horizontally through the columns and connect the output with the information we obtained Tuesday with the [online GO Panther enrichment tool](http://geneontology.org/). 
 
 ```{r}
 ego_pson_pos <- enrichGO(
@@ -253,16 +280,11 @@ head(ego_pson_pos,12)
 
 Are these annotations consistent with our "hypothesis" that genes with the greatest differential expression between the "fast" and "slow" breast cancer cell lines may be related to motility?
 
-We can use the visualization tools **clusterProfile** provides to inspect our results.  Run the following chunk.  Do you prefer the output table above or the plot?
-
-```{r}
-help(dotplot)
-```
-
+We can use the visualization tools **clusterProfile** provides to more easily inspect our results.  Run the following chunk.  Do you prefer the output table above or the plot?
 
 
 ```{r}
-dotplot(ego_pson_pos,font.size=8,showCategory=12)
+dotplot(ego_pson_pos,font.size=10,showCategory=8)
 ```
 
 
@@ -329,19 +351,144 @@ Use barplot or dotplot to visualize the enrichments.
 
 ```
 
+
+## Gene Set Enrichment Analysis (GSEA)
+
+### Enrichment analysis review
+Our GO enrichment or over-representation analysis investigated the fraction of our gene list that appears in a specific GO definition or "GO term." If, say, 0.3% of all human genes are in a pathway, but 20% of the genes in our list are within this pathway, then that GO term is over-represented.  We considered a small subset of genes (1%, or 200 of 18.6K total) with the highest absolute `delta` (> 4). However, this choice is arbitrary. Further, many genes contribute to the dysregulation of cellular pathways in cancer and not all of them are as highly differentially expressed.
+
+### Gene set enrichment analysis
+GSEA (gene set enrichment analysis) works differently from over-representation analysis. For GSEA, we provide ALL the genes in our analysis, i.e. without a cutoff. It's important that the genes are ranked by some statistic, for example, differential expression between two cell lines, as we've already done.  In essence, the algorithm walks through the list from top to bottom, investigating a certain pathway (represented by a gene set). When a gene is in the pathway the enrichment score is increased, if it isn't the enrichment score is decreased. The increase depends on the rank and weight, such that the higher the rank and fold change, the bigger the boost in enrichment score. The end result is a single enrichment score that is high if the pathway genes are clustered at the top/bottom, and low if they are randomly distributed throughout the ranked list.
+
+Using the ranked list of differentially expressed genes (geneList_ensembl) we will run Gene Set Enrichment Analysis. The package clusterProfiler provides a function `gseGO()` for this task. The reference gene sets available in this function are the Gene Ontology categories: Biological Process (BP), Cellular Compartment (CC), and Molecular Function (MF).
+
+In the code below we will be using the Biological Process (BP) reference gene set. 
+
+```{r, warning=FALSE}
+
+set.seed(38737)
+gsea_BP_BH <- gseGO(geneList=geneList_ensembl, 
+                 ont ="BP", 
+                 keyType = "ENSEMBL", 
+                 minGSSize = 15,
+                 maxGSSize = 500,
+                 pvalueCutoff = 0.05, 
+                 verbose = FALSE, 
+                 OrgDb = org.Hs.eg.db, 
+                 pAdjustMethod ="BH",
+                 seed = TRUE,
+                 )
+```
+
+
+Observe the first few enriched gene sets in the GSEA results. How does the list compare with our results from GO Enrichment Analysis?  Scroll horizontally to see the statistics provided by the analysis.
+
+```{r}
+head(gsea_BP_BH)
+```
+
+To visualize the enriched gene sets, we use the function named `dotplot()` and combine it with another function `facet_grid()`, which allows simultaneous visualization of enriched gene sets of the fast (MDA-MB-231) and slow (T-47D) cell lines. In this plot the fast cell line is represented in the plot labeled "activated" and the slow cell line is represented in the plot labeled "suppressed."  
+
+For each plot the y-axis displays gene set names and the x-axis displays the gene ratio. Gene ratio is the fraction of differentially expressed genes in a gene set over the total number of differentially expressed genes. 
+
+```{r, message= FALSE, warning= FALSE}
+dotplot(gsea_BP_BH, showCategory=10, split=".sign", font.size=10) + facet_grid(.~.sign)
+```
+
+We obtain results consistent with those we obtained from the less comprehensive over-representation analysis, suggesting our annotations are biologically meaningful.  For example, "activated" is annotated with "positive regulation of cell migration," and "repressed" is annotated with "keratinocyte differentiation" and "epidermal cell differentiation." 
+
+We can summarize the GSEA results of the fast cell line into three categories.
+1. modes of movement
+  * epithelium migration
+  * ameoboid-type cell migration
+2. processes involved in movement
+  * extracellular matrix organization
+  * extracellular structure organization
+3. processes that rely on movement
+  * angiogenesis
+  * gastrulation
+
+
+Select another sub GO ontology (MF or CC) and run GSEA:
+
+```{r, warning= FALSE, message= FALSE}
+
+my_go_ont = " "
+
+set.seed(121)
+my_gsea <- gseGO(geneList=geneList_ensembl, 
+                ont = my_go_ont, 
+                keyType = "ENSEMBL", 
+                minGSSize = 15, 
+                maxGSSize = 500, 
+                pvalueCutoff = 0.05, 
+                verbose = FALSE, 
+                OrgDb = org.Hs.eg.db, 
+                pAdjustMethod = "none",
+                seed = TRUE)
+
+```
+
+
+Which genesets are over-represented in your GSEA run?
+
+```{r}
+head(my_gsea)
+dotplot(my_gsea, showCategory=10, split=".sign", font.size=10) + facet_grid(.~.sign)
+```
+
+
+In addition to reference genesets from Gene Ontology, the clusterProfiler package also allows users use other gene sets, for example from [Molecular Signatures Database](https://www.gsea-msigdb.org/gsea/msigdb/). The MSigDB collection of gene sets were designed to reflect pathways and processes involved in cancer. 
+
+```{r, warning= FALSE, message= FALSE}
+
+hallmarks <- read.gmt(file.path(data_dir,"h.all.v7.4.symbols.gmt"))
+
+head(unique(hallmarks$term))
+
+```
+
+
+
+```{r, warning= FALSE, message= FALSE}
+set.seed(10)
+gsea_hall <- GSEA(geneList_symbol, 
+                  TERM2GENE=hallmarks, 
+                  verbose=FALSE,
+                  minGSSize = 15, 
+                  maxGSSize = 200, 
+                  pvalueCutoff = 0.05, 
+                  seed = TRUE)
+
+head(gsea_hall)
+
+```
+
+
+Plot GSEA results using Hallmark genes. 
+
+```{r, warning= FALSE, message= FALSE}
+dotplot(gsea_hall, showCategory=15, split=".sign", font.size=10) + facet_grid(.~.sign)
+```
+
+One of the top processes for "activated" ranking "hallmark_epithelial_mesenchymal_transtion". 
+
+"Repressed" ranking shows estrogen responses as top processes, consistent with the T-47D being a model for less aggressive breast cancer.
+
+
 ---
 
-## Module 6 mini-DREAM Challenge
+## mini-DREAM Challenge
 
 **QUESTION:** How does enrichment analysis look when we use the ranked absolute values of delta? Consider BP, MF, or CC.
 
 In this activity, you will provide answers in six R objects:
-* my_gene_count, line 385
-* my_go_subontology, line 393
-* my_top_go_id, line 415
-* my_go_description, line 419
-* my_fav_go_term, line 436
-* my_rationale, lin3 439
+* my_gene_count
+* my_go_subontology
+* my_top_go_id
+* my_go_description
+* my_fav_go_term
+* my_rationale
 
 First, let's set up the data to use as input for the `enrichGO` function.
 
@@ -449,11 +596,13 @@ synLoginSecure()  # You might be prompted for your username and password
 submission <- submit_module_answers(module = 5)
 ```
 
-Congrats — you’ve reached the end of **Module 6**! You can now return to the **mini-DREAM Challenge** site on Synapse.
+Congrats — you've reached the end of **Module 5**! You can now return to the **mini-DREAM Challenge** site on Synapse.
 
 ---
 
 # Bonus — Thought questions
 
 How many genes are in the sets we analyzed?  What would be the consequences of including more or fewer genes in our sets?  What are the potential perils of having gene sets that are "too small" or "too large"?  Would you expect to obtain many statistical enrichments for a small set?  What might result when the set is too large?
+
+
 
