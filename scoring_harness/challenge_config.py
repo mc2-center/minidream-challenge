@@ -14,6 +14,7 @@ import os
 ## CHALLENGE_SYN_ID = "syn1234567"
 CHALLENGE_SYN_ID = "syn29616137"
 
+
 ## Name of your challenge, defaults to the name of the challenge's project
 CHALLENGE_NAME = "2022 CSBC PS-ON mini-Dream Challenge"
 
