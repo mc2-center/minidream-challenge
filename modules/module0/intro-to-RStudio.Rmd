@@ -1,0 +1,216 @@
+---
+title: "Intro To RStudio"
+author: "Gianna Jordan"
+date: '2022-06-23'
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+data_dir <- "/home/shared/data"
+scripts_dir <- "/home/shared/R"
+source(file.path(scripts_dir, "submission_helpers.R"))
+```
+**Welcome to the miniDREAM Intro to R session!**  
+
+
+# Overview
+
+We'll cover:  
+
+* Updating our passwords
+* Programming basics
+* The RStudio IDE
+* Customizing your IDE
+* Simple Data Visualization
+* mini-DREAM Challenge
+
+<br>
+
+#### R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. The R Markdown format is useful because it allows us to combine text and code in a way that allows it to run and be easily read.  
+
+
+# The RStudio IDE
+An **IDE**, or **Integrated Development Environment** is a specialized text editor used to write code. There are different IDEs for different languages, and often multiple IDE options for a given language. Some IDEs, like RStudio, can even be used for multiple programming languages! Often, IDEs come with a variety of features to make programming easier.  
+Some examples are:
+
+* Auto completion prompts
+* Color coding functions or other groups of text
+* Debugging tools
+* Help options for various aspects of the IDE or code
+
+***
+
+# Password Changing
+Right now, your IDE likely has 4 panels, with panes for:  
+
+* Source
+* Console
+* Environment / History / Connections / Tutorial
+* Files / Plots / Packages / Help / Viewer
+
+For now, lets navigate to `Tools > Shell` where we'll run the following command to change our passwords to sign in to the miniDREAM environment.
+
+```{r eval=FALSE} 
+passwd
+```
+
+You should receive prompts to enter your current password, a new password, and then to confirm the new password.  
+As you enter your various passwords **no text will appear, but this is normal** and is similar to how passwords on websites are protected with black dots during entry.
+
+***
+
+# The Panes of the IDE
+
+## Console
+In the console, you can execute commands one line at a time. This is really useful for trying out new things or different approaches while taking your time.  
+Try running the following lines of code in the console!
+```{r eval=FALSE}
+month <- 'June'
+```
+
+```{r eval=FALSE}
+temperature <- 105
+```
+
+We just assigned values to the variables `month` and `temperature`. Variables can hold data of different types; in this case `month` holds a string or a type useful for storing characters and text, and `temperature` holds a numerical integer value. There are other data types as well.
+
+## Environment / History / Connections / Tutorial
+After running the last two commands successfully, you should now see the two variables and their values displayed in the `Environment` pane. This pane shows all of the variables that exist currently, and their values.  
+Within the same pane, you can click to the `History` pane to see the history of the commands you have already run. There's also the `Connections` pane, that shows connections you've made to supported external data sources, and the `Tutorial` pane that gives short lessons on things you can do in R.
+
+## Source
+Running commands one at a time in the console is useful in certain situations, but with only using the console it can be hard to rerun larger sections of code, hard to remember the steps you took when looking back to the past, and hard to share your code with others. That is where the `Source` pane comes in!  
+We can open a new file by navigating to `File > New File` and then picking a file type. For now, let's pick `R Script`. In the script, you can write all of your code and save it so that it can be stored for later reference and use, or shared with colleagues to rerun.
+
+## Files / Plots / Packages / Help / Viewer
+The last pane has multiple tabs: `Files` lists the files and folders in your current directory, or the folder that you've navigated to. Any graphs or figures that you generate with code in RStudio are displayed in the `Plots` pane. `Packages` Lists all of the packages that you have installed and their version numbers. The `Help` pane will display more detailed information about R functions and datasets to assist you as you write. The `Viewer` pane is useful for visualizing documents like this R Markdown file!
+
+***
+# Customization
+
+There are many settings for RStudio that you can configure to your preference!  
+Lets navigate to `Tools > Global Options`. Here we can change everything from font size to theme, and how RStudio behaves.
+
+***
+# Programming in R with RStudio
+
+Let's start working with data and data visualization!  
+The first dataset we'll work with is the `cars` dataset. We get background information about this dataset, and look at the first few entries by running:
+```{r cars}
+?cars
+head(cars)
+```
+From the help description and the first few entries of the dataset, we can see that this dataset contains data on the distance cars take to stop given the speed that they were going, and that the data were collected in the 1920's.  
+We can use functions built into R, like `plot()`, to quickly visualize the data.
+```{r}
+plot(cars)
+title('Car Stopping Distance vs. Speed')
+```
+
+Aside from the built in functions, there are other packages that the R community has created that expand the functionality of R. Lets use one of those packages, `ggplot2`, to visualize another dataset.
+We'll also assign the `ChickWeight` dataset to the variable `chk` so we don't have to type as much.
+
+```{r ChickWeight}
+?ChickWeight
+chk <- ChickWeight
+head(chk)
+```
+
+ChickWeight is a dataset that contains the weight of chicks on different diets over the first 21 days of their lives. Lets import `ggplot2` so we can use it to visualize our dataset.
+```{r}
+library('ggplot2')
+```
+
+
+We know that we want to look at the weight of each chick over time, so let's start with a plot of the dataset, and specify that we want the `x` axis to be time, and the `y` axis to be weight. After creating the base plot layer, we can add more layers to it to change the appearance of the plot. Below, we'll use `geom_point` to generate a scatter plot.
+```{r}
+plt <- ggplot(data = chk, aes(x = Time, y = weight)) +
+  geom_point() +
+  labs(
+    x = 'Day of Life',
+    y = 'Weight (grams)',
+    title = ('Weight of Chicks at the Beginning of Life')
+  )
+show(plt)
+```
+
+This graph displays the information we gave it, but if you remember, there was data for each individual chick, and there were four diets being studied. We can use the `aes` mapping to further specify how data is displayed. In this case, we can color code the data for each diet.
+
+```{r}
+plt <- ggplot(data = chk, aes(x = Time, y = weight)) +
+  geom_point(aes(color = Diet))  +
+  labs(
+    x = 'Day of Life',
+    y = 'Weight (grams)',
+    title = ('Weight of Chicks at the Beginning of Life')
+  )
+
+show(plt)
+```
+
+To get more detailed and look at the trends of each individual chick, and how the whole diet group performed, we can add another layer with `geom_line`, group the lines by chick, and color code according to diet
+
+```{r}
+plt <- ggplot(data = chk, aes(x = Time, y = weight)) +
+  geom_point(aes(color = Diet)) + 
+  geom_line(aes(group = Chick, color = Diet))  +
+  labs(
+    x = 'Day of Life',
+    y = 'Weight (grams)',
+    title = ('Weight of Chicks at the Beginning of Life')
+  )
+
+show(plt)
+```
+
+If we don't want a scatter or line plot, and we just want to look at the trends of the diet groups as a whole, then it's as easy as switching out the layers we add to our base layer!
+
+```{r}
+plt <- ggplot(data = chk, aes(x = Time, y = weight)) +
+  geom_smooth(aes(group = Diet, color = Diet, fill = Diet), method = 'loess', formula =  'y ~ x')  +
+  labs(
+    x = 'Day of Life',
+    y = 'Weight (grams)',
+    title = ('Average Weight of Diet Groups at the Beginning of Life')
+  )
+
+show(plt)
+```
+
+***  
+
+# mini-DREAM Challenge
+
+This is a small preview of the challenge exercises that we'll include at the end of each activity. You'll be prompted to write some code and submit an answer to the challenge question. Your submission will get "scored" (or at least checked), and the results will be reported within a few minutes.
+
+**QUESTION:** What is Gianna's birthday?
+
+Enter your best guess of Gianna's birthday. For a bonus, you can guess her age too.
+
+```{r}
+# format your guess as 'MM/DD'
+my_bday_guess <- "06/15"
+# just give a round number for this one
+my_age_guess <- 42
+```
+
+
+## Submitting the prediction
+
+You're now ready to submit the prediction. Just run the chunk below, a file with your prediction will be uploaded to Synapse and submitted to the challenge. You'll be able to see the results of your prediction on the mini-DREAM scoreboards, with the submission ID that gets printed below.
+
+```{r}
+library(synapser)
+synLogin('my_synapse_username', 'my_synapse_password',
+         rememberMe = TRUE, silent = TRUE)  # You might be prompted for your username and password
+submission <- submit_module_answers(module = 0)
+```
+
+Congrats — you've reached the end of **Module 0**! You can now return to the **mini-DREAM** Challenge site on Synapse. **Make sure to save your work before you leave!**
+
+---
