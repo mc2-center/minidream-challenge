@@ -9,6 +9,7 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
 ```
 **Welcome to the miniDREAM Intro to R session!**  
 
@@ -41,6 +42,7 @@ Some examples are:
 * Help options for various aspects of the IDE or code
 
 ***
+
 # Password Changing
 Right now, your IDE likely has 4 panels, with panes for:  
 
@@ -201,8 +203,10 @@ my_age_guess <- 42
 
 You're now ready to submit the prediction. Just run the chunk below, a file with your prediction will be uploaded to Synapse and submitted to the challenge. You'll be able to see the results of your prediction on the mini-DREAM scoreboards, with the submission ID that gets printed below.
 
-```{r, eval=FALSE}
-synLoginSecure()  # You might be prompted for your username and password
+```{r}
+library(synapser)
+synLogin('my_synapse_username', 'my_synapse_password',
+         rememberMe = TRUE, silent = TRUE)  # You might be prompted for your username and password
 submission <- submit_module_answers(module = 0)
 ```
 
