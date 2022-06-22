@@ -72,7 +72,7 @@ Try running the following lines of code in the console!
 ```{r eval=FALSE}
 month <- 'June'
 ```
-or 
+
 ```{r eval=FALSE}
 temperature <- 105
 ```
@@ -102,7 +102,7 @@ Lets navigate to `Tools > Global Options`. Here we can change everything from fo
 Let's start working with data and data visualization!  
 The first dataset we'll work with is the `cars` dataset. We get background information about this dataset, and look at the first few entries by running:
 ```{r cars}
-#?cars
+?cars
 head(cars)
 ```
 From the help description and the first few entries of the dataset, we can see that this dataset contains data on the distance cars take to stop given the speed that they were going, and that the data were collected in the 1920's.  
@@ -116,14 +116,13 @@ Aside from the built in functions, there are other packages that the R community
 We'll also assign the `ChickWeight` dataset to the variable `chk` so we don't have to type as much.
 
 ```{r ChickWeight}
-#?ChickWeight
+?ChickWeight
 chk <- ChickWeight
 head(chk)
 ```
 
-ChickWeight is a dataset that contains the weight of chicks on different diets over the first 21 days of their lives. Lets install and import `ggplot2` so we can use it to visualize our dataset.
+ChickWeight is a dataset that contains the weight of chicks on different diets over the first 21 days of their lives. Lets import `ggplot2` so we can use it to visualize our dataset.
 ```{r}
-#install.packages('ggplot2')
 library('ggplot2')
 ```
 
