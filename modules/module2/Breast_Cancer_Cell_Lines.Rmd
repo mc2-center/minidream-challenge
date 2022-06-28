@@ -1,0 +1,577 @@
+---
+title: 'Breast Cancer Cell Lines'
+author: "Diana Murray and Andrew Gentles"
+date: "June 27, 2022"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: "spacelab"
+    code_folding: "show"
+
+---
+
+## About this activity
+
+Last time, we leveraged core R functionality to explore clinical information from over 1,000 breast cancer patient samples (TCGA). 
+
+In this module, we will work with data from experiments with *human cancer cell lines* from the [Physical Sciences in Oncology Cell Line Characterization Study](https://www.synapse.org/#!Synapse:syn7248578).
+
+The PSON Cell Line study includes imaging- and microscopy-based measurements of physical properties of cells, such as morphology (shape) and motility (movement). We will explore a portion of the contents of this resource and, in particular:
+
+1. choose two appropriate cell lines as models for breast cancer,
+2. examine how fast cells from these lines move on different surfaces, and 
+3. quantitate the differential gene expression across the two cell lines. 
+
+
+---
+
+## Preliminaries
+
+#### The knitr R package 
+
+**knitr()** is the R package that generates the report from R Markdown. We can create reports as Word doc, PDF, and HTML files. 
+
+An R package bundles together code, data, documentation, and tests, and is easy to download and share with others.
+
+```{r setup, include=FALSE, message = FALSE}
+
+library(knitr)
+knitr::opts_chunk$set(echo = TRUE)
+
+library(imager)  # We are loading this package so we may look at images.
+
+```
+
+#### The data directory
+
+We will create an object that holds the name of the directory where the TCGA data resides. 
+This is good R coding practice because we can apply all we do below to a data set 
+in a different directory by changing a single variable (`data_dir`).
+
+```{r}
+
+data_dir <- "/home/data"    # The data we are using is located in this directory 
+                             # on our cloud computing server.
+
+# Look in your Environment tab!
+
+```
+
+
+---
+
+## Loading the data
+
+`PSON.RData` contains gene expression and cell speed data from the PSON Cell Line project.
+
+```{r}
+
+# The objects will also appear in our "Environment" tab.
+load(file.path(data_dir, "PSON.RData"),verbose=TRUE)
+
+```
+
+Objects were named to be be descriptive.
+
+* "pson" stands for "Physical Sciences in Oncology"
+* "expr" stands for "gene expression data"
+* "df" stands for "data frame"
+
+---
+
+## Expression data
+
+The **Environment** tab gives us basic information on the object that was loaded.
+
+You can use some of the R functions we learned previously to remind us what is in the data frames we loaded.
+
+* `dim()` tells us the dimensions (# row, # columns) of the objects.
+* `head()` shows us the top several rows of the objects.
+* *indexing* allows us to look at the rows and columns we choose.
+
+```{r}
+
+pson_expr_df[1:5,1:5]
+
+```
+
+The first column ("symbol") contains the gene names whose expression values were measured. 
+
+The remaining columns contain mRNA levels for different experiments. (More about this below!)  
+
+In order to perform numerical calculations on this data, we need to create a numerical matrix of the mRNA levels with the gene names as row names.
+
+
+```{r}
+# Remove the first column because it contains non-numerical data (gene names).
+pson_expr_mat <- as.matrix(pson_expr_df[, -1])  
+
+# Make the gene names into row names.
+rownames(pson_expr_mat) <- pson_expr_df$symbol  
+
+# What are the dimensions of the matrix?
+dim(pson_expr_mat)
+
+```
+
+There are 18,682 genes whose levels were measured across 63 experiments!  This is a much larger data set than we examined last time.
+
+
+```{r}
+
+# Use indexing to take a look at the data
+pson_expr_mat[1:5, 1:5] 
+
+
+```
+
+Now, gene names denote the rows and the experiments (samples) have IDs given as column names.
+
+
+### Transcripts per Million
+
+There are many ways of summarizing mRNA expression levels. The mRNA expression values in our matrix have units of TPM or "transcripts per million." Each column in the expression data *should* add up to 1,000,000. 
+
+To learn more about the different ways RNA-seq levels are measured, check out [StatQuest's video](https://www.youtube.com/watch?v=TTUrtCY2k-w).  
+
+
+```{r}
+
+colSums(pson_expr_mat) # Add up the values in each column
+
+```
+
+Most of the columns **don’t** add up to a million. The original data table included many more rows than the 18,682 we see here, but in the **tidying** process we removed the genes that do not code for proteins.
+
+
+### Log transformation
+
+Gene expression data is typically log-transformed to compress the range of the values.
+
+We will look at the average of the genes across experiments to get a sense of the scale of expression values.
+
+```{r}
+
+# We "apply" the function mean() to all rows.
+
+mean.expr <- apply(pson_expr_mat, 1, mean)     # The argument 1 tells to average each row.
+   
+# Take a look at the first 25 mean values.
+as.table(round(mean.expr[1:25],0))
+
+```
+
+Now that we have the mean expression for all 18K genes, how else may we use this information? 
+
+
+### Plotting average expression
+
+Let's try plotting the mean expression values (we saved these values in the object `mean.expr`) as a histogram. 
+
+We're getting better at R, so we can make our histogram a little more informational.
+
+```{r}
+hist(mean.expr, 
+     breaks=100, 
+     main="Distribution of Gene Expression Values",
+     xlab="Mean Expression")
+
+# The first argument to `hist()` is the data, the second is how many bars  
+# we want to show, the third is a title for the plot, and the fourth is 
+# the name of the x-axis.
+
+```
+
+Wow!  Most of the average expression values are relatively small but it's hard to see that range because of a few **very large** values.
+
+How many values in `mean.expr` are greater than 200? 
+
+```{r}
+
+mean.expr.high <- mean.expr[mean.expr > 200]
+
+length(mean.expr.high)
+
+100*length(mean.expr.high)/length(mean.expr)
+
+```
+
+Out of 18,682 mean values, only 573 (3%) are greater than 200!
+
+Let's zoom in on the average expression values **less than** 200:
+
+```{r}
+
+# Let's look at the "distribution" of mean expression values
+# that are less than 200.
+
+mean.expr.low <- mean.expr[mean.expr < 200]  
+
+hist(mean.expr.low, 
+     breaks=50, 
+     main="Distribution of Gene Expression Values",
+     xlab="Mean Expression")
+
+```
+
+### Log transformation
+
+There are only a few genes that have really large average expression. The curve in the histogram has a *long right tail*. 
+
+Nearly all genes have relatively *low* expression, and very few genes have *high* expression.  
+
+In other words, our data is **highly skewed**.
+
+Unfortunately, many analysis functions in R do not work well with skewed data. Instead, the functions assume the data are **normally distributed**, which means their histogram is bell-shaped. This is not the situation with our data! 
+
+A **log transformation** can be used to make highly skewed distributions less skewed and sometimes normally distributed. 
+
+Log transformations are valuable for 
+* making patterns in the data more interpretable, and 
+* helping to meet the assumptions of the statistics underlying our analysis. 
+
+To read more about this, check out [Log Transformations](https://onlinestatbook.com/2/transformations/log.html). 
+
+#### Log base 2 (log2)
+
+We use log base 2 (log2) because it's relevant and easy to interpret in the context of measuring mRNA of genes across conditions.
+
+For example, a log2-fold change of 1 means that the expression of that gene across conditions is doubled. If it's 2, then the expression has increased 4-fold.
+
+But be careful!  Log2(0) is infinity!  So, we add 1 to all expression values before the transformation.
+
+```{r}
+
+pson_log_mat <- log2(1 + pson_expr_mat)
+
+pson_log_mat[1:5, 1:5]
+
+```
+
+Does doing the transformation help us with the skewness problem?
+
+
+```{r}
+
+mean.expr.log2 <- apply(pson_log_mat, 1, mean)
+
+hist(mean.expr.log2, 
+     breaks=100, 
+     main="Distribution of Log2-transformed Gene Expression Values",
+     xlab="Mean Log2 Expression")
+
+# The first argument to `hist()` is the data, the second is how many bars  
+# we want to show, the third is a title for the plot, and the fourth is 
+# the name of the x-axis.
+
+```
+
+The log-transformed data is 
+
+* more compressed
+* much less skewed and 
+* even has some bell-shaped character.  
+
+While this isn't a true normal distribution of data (especially at the lower range), it is much closer, and importantly, close enough for some exploratory analyses.
+
+In our future analyses, we will be working with the log-transformed data!
+
+
+---
+
+## Motility data
+
+The object `cell_speeds_df` contains data that is completely new to us.
+
+
+```{r eval = FALSE}
+
+# Uncomment the next code line to take a look!
+
+# View(cell_speeds_df)
+
+```
+
+
+Let's get the column names of this data frame:
+
+```{r}
+
+colnames(cell_speeds_df)
+
+```
+
+What does this all mean?
+
+* "sample" is the name of the experiment
+* "cellLine" is the human cancer cell line name
+* "diagnosis" is the cancer type that the cell line models
+* "experimentalCondition" gives the substrate on which the cells were grown
+* "summary_metric" tells us that cell speed in microns per hour was measured
+* "average_value" is the average cell speed for that experiment
+* "total_number_of_cells_tracked" tells us how many cells were watch in the imaging microscope
+
+
+### Cancer cell lines
+
+What cell lines (`cellLine`) were examined?  
+
+And what cancer types do the cell lines represent (`diagnosis`)?
+
+```{r}
+
+# The unique() function gives us the list of values in that feature
+
+unique(cell_speeds_df$cellLine)
+
+unique(cell_speeds_df$diagnosis)
+
+```
+
+We can use the function `unique()` on a table as well!
+
+```{r}
+unique(cell_speeds_df[,c(2,3)])
+```
+
+
+We are interested in the two breast cancer cell lines: 
+
+* T47-D 
+* MDA-MB-231
+
+
+Each experiment was conducted under different conditions. 
+
+"experimentalCondition" gives the type of substrate on which cell speed was measured.
+
+```{r}
+
+unique(cell_speeds_df$experimentalCondition)
+
+```
+
+We will use the data for the experimental condition "HyaluronicAcid Collagen".
+
+---
+
+### Hyaluronic acid and collagen
+
+Hyaluronic acid, collagen, and fibronectin are all common components of the extracellular matrix for biological cells.
+
+```{r}
+substr_img<-load.image(file.path(data_dir,"ECMatrix.JPG"))
+
+plot(substr_img,axes=FALSE)
+
+```
+
+Hyaluronan and collagen are important components of the extracellular matrix, so the "HyaluronicAcid Collagen" substrate is a reasonable model for the space in which cells move!
+
+
+```{r}
+
+# Make a smaller data frame for this condition
+hyal_coll_df <- subset(cell_speeds_df, 
+                       experimentalCondition == "HyaluronicAcid Collagen")
+hyal_coll_df
+
+```
+
+Nine experiments were done on the "HyaluronicAcid Collagen" substrate.  
+
+Two of these experiments were done with breast cancer cell lines:
+
+1. T-47D (experiment mRNA_R56) 
+2. MDA-MB-231 (experiment mRNA_R63).
+
+
+```{r}
+
+# Make an even smaller data frame that includes only the breast cancer cell lines
+hyal_brca_df <- subset(hyal_coll_df, 
+                       diagnosis == "Breast Cancer")
+head(hyal_brca_df)
+
+```
+
+The "summary_metric" is cell speed in microns per hour (um_hr).  From this table, we see that one cell line (MDA-MB-231) moves twice as fast as the other cell line (T-47D) on the "HyaluronicAcid Collagen" substrate:  36 u/hr versus 16 u/hr.   
+
+We'll call MDA-MB-231 the "fast" cell line and T-47D the "slow" cell line.
+
+---
+
+## Expression and motility data
+
+Even though the expression matrix contains information from 63 experiments, we want only the expression data from the two experiments for the breast cancer cell lines measured on the "HyaluronicAcid Collagen" substrate.
+
+Let's extract these two experiments from the expression matrix.
+
+```{r}
+
+# We match the experiments in the column of our motility sub-table `hyal_brca_df`
+# with the column names of our expression matrix `pson_log_mat`
+
+exps <- match(hyal_brca_df$sample, colnames(pson_log_mat))
+
+# Then make a sub-matrix with the expression data for only these two exepriments
+hyal_brca_log_mat <- pson_log_mat[, exps]
+
+# Rename the experiments according to the relative speed of the cells
+colnames(hyal_brca_log_mat) <- c("slow","fast")
+
+# Look at the first 10 rows
+hyal_brca_log_mat[1:10,]
+
+```
+
+
+Some of the genes have a similar expression level in both cell lines, but some genes are quite different.
+
+Genes that have very different levels in the "fast" versus "slow" cell lines may be informative about why the cell lines behave differently.
+
+By subtracting the expression in the "slow" cell line from the expression in the fast cell line, we create a **differential gene expression profile**, or DGE profile. 
+
+### Differential Gene Expression
+
+```{r}
+
+# Subtract the first and second columns
+dge <- hyal_brca_log_mat[,2] - hyal_brca_log_mat[,1]
+
+# Add the column to a new matrix 
+DGE_mat <- cbind(hyal_brca_log_mat,dge)
+
+# Sort the differential gene expression values from high to low
+order_dge <- order(dge, decreasing = TRUE)
+
+# Re-order the rows of the matrices so we can easily see which
+# genes are most expressed in "fast" versus "slow"
+DGE_mat <- DGE_mat[order_dge,]
+
+# Look at the first 10 rows
+head(DGE_mat, 15)
+
+```
+
+We can also look at the bottom of the matrix to see which genes are more highly expressed in the "slow" cell line versus the "fast" cell line.
+
+
+```{r}
+# Look at the last 10 rows
+tail(DGE_mat,15)
+
+```
+
+
+There are many genes that are preferentially expressed in one cell line versus the other.  
+
+```{r}
+
+hist(DGE_mat[,3], xlab = "Differential gene expression, DGE",
+                  main = "Histogram of dge values")
+
+```
+
+Most of the DGE values are around zero, so most genes have very similar expression in the "fast" and "slow" cell lines.
+
+The genes with large differential expression (those in the tail of the histogram) are the most interesting to consider because they may provide us with clues as to why the cell lines behave so differently.
+
+We could consider this in much greater detail, and this is just a hint of how a relatively small number of genes can make a big difference in function.
+
+
+---
+
+## Vimentin and keratin in motility
+
+VIM, which codes for the protein vimentin, is at the very top of the expression matrix ranked by `dge`, and KRT23, which codes for the protein keratin, is near the bottom. 
+
+This image comes from the paper, ["Vimentin induces changes in cell shape, motility, and adhesion during the epithelial to mesenchymal transition"](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2874471). 
+
+Cells that express vimentin filaments (VIF) but not keratin filaments (KIF) are elongated in shape and move better (more motile, panel A), whereas cells with KIF and not VIF are round and undergo fewer changes in morphology (shape) and position (panel B).
+
+
+```{r}
+
+VIF_KIF_img<-load.image(file.path(data_dir,"VIF_KIF.JPG"))
+
+plot(VIF_KIF_img,axes=FALSE)
+
+```
+
+The vimentin filament cells in A are elongated and move more quickly than the keratin filaments cells in B. A main difference between the cells is the different expression levels of VIM versus KRT23.  And we observed this in our very preliminary analysis!
+
+
+## mini-DREAM Challenge submission part 1
+
+Choose a gene from among those ranked between 20 and 30 as more highly expressed in the faster cell line.
+
+Save your gene to an object called `my_gene_fast`. (Keep the quote marks to denote a character object!)
+
+```{r}
+
+# Uncomment the code and replace XXXXX with your gene
+
+# my_gene_fast <- "XXXXX"
+
+
+```
+
+
+Look up your gene (`my_gene_fast`) on [UniProt](https://www.uniprot.org/uniprot/) and find a reason why this gene may be important for cell motion.
+
+
+Place your reason between the quotation marks in the object `my_reason_fast`.
+
+```{r}
+
+# Uncomment the code and replace BlahBlah with your explanation
+
+# my_reason_fast <- "BlahBlah"
+
+
+```
+
+
+## mini-DREAM Challenge submission part 2
+
+Do the same for a gene that is more highly expressed in the relatively slower cell line. Choose a gene from among the 30 genes at the bottom of `DGE_mat`.
+
+
+```{r}
+
+# Uncomment the code and replace XXXXX with your gene
+
+# my_gene_slow <- "XXXXX"
+
+
+```
+
+
+Look up this gene (`my_gene_slow`) on [UniProt](https://www.uniprot.org/uniprot/) and find a reason why this gene may confer resistance to cell motion.
+
+
+```{r}
+
+# Uncomment the code and replace BlahBlah with your explanation
+
+# my_reason_slow <- "BlahBlah"
+
+
+```
+
+**Congratulations on completing another mini-DREAM Challenge!**
+
+To recap:
+
+1. The PSON Cell Line Characterization Study provides a wealth of information, such as shape and speed, about cancer cell lines. 
+2. Cancer cell lines are often used as models for human cancer.  
+3. The "slow" moving cancer cell line, T-47D, is a model for early stage breast cancer. 
+4. The "fast" moving cancer cell line, MD-MBA-231, is a model for more aggressive breast cancer. 
+5. Differential gene expression between the two cell lines identified genes that are implicated in the growth and morphology of cells.
+ 
+
+
+
+

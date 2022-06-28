@@ -17,19 +17,33 @@ create_module0_submission <- function() {
   submission_filename
 }
 
+create_module1_submission <- function() {
+  submission_filename <- paste(Sys.getenv("USER"), "activity-1.yml", sep = "_")
+  
+  N_lobular_guess <<- N_lobular
+  N_tumor_free_guess <<- N_tumor_free
+  
+  answers <- list(
+    N_lobular = N_lobular_guess, 
+    N_tumor_free = N_tumor_free_guess 
+  )
+  write_yaml(answers, submission_filename)
+  submission_filename
+}
+
 create_module2_submission <- function() {
   submission_filename <- paste(Sys.getenv("USER"), "activity-2.yml", sep = "_")
   
-  gene <<- my_gene
-  delta <<- my_delta
-  description <<- my_description
-  rationale <<- my_rationale
+  gene_fast <<- my_gene_fast
+  gene_slow <<- my_gene_slow
+  reason_slow <<- my_reason_slow
+  reason_fast <<- my_reason_fast
   
   answers <- list(
-    gene = gene, 
-    delta = delta, 
-    description = description, 
-    rationale = rationale
+    gene_fast = gene_fast, 
+    gene_slow = gene_slow, 
+    reason_slow = reason_slow, 
+    reason_fast = reason_fast
   )
 
   write_yaml(answers, submission_filename)
