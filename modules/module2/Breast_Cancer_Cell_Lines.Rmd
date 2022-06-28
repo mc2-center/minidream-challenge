@@ -561,6 +561,19 @@ Look up this gene (`my_gene_slow`) on [UniProt](https://www.uniprot.org/uniprot/
 
 ```
 
+Submit to the leaderboard
+```{r}
+# Load function to submitting answers to the leader board
+scripts_dir <- "/home/shared/R"
+source(file.path(scripts_dir, "submission_helpers.R"))
+
+# Log into Synapse
+synLoginSecure()  # You might be prompted for your username and password
+
+# Submit answers
+submission <- submit_module_answers(module = 2)
+```
+
 **Congratulations on completing another mini-DREAM Challenge!**
 
 To recap:
