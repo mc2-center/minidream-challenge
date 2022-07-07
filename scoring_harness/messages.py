@@ -17,7 +17,7 @@ dry_run = False
 ## Edit these URLs to point to your challenge and its support forum
 defaults = dict(
     challenge_instructions_url = "https://www.synapse.org/#!Synapse:syn12105406/wiki/527865",
-    support_forum_url = "https://www.synapse.org/#!Synapse:syn12105406/discussion/default",
+    support_forum_url = "https://www.synapse.org/#!Synapse:syn29616137/discussion/default",
     scoring_script = "CSBC PS-ON mini-DREAM admins")
 
 ##---------------------------------------------------------
