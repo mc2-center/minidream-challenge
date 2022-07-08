@@ -78,6 +78,51 @@ The "weighted" distance seems to scale the distance measures - this could be ver
 
 So scaling can be important when using values that are different orders of magnitude. You will see Thurs that gene expression values can and do vary by orders of magnitude so scaling the data is necessary for any reasonable analysis.
 
+## mini-DREAM submission question 1
+
+### Part 1: Create a 2x2 matrix such that row 1 contains 2 and 4, and row 2 contains 100 and 200.
+
+
+```{r}
+
+# Create a 2 by 2 matrix by binding row1 with row2
+row1 <- 
+
+row2 <-
+  
+mat2 <- 
+  
+
+```
+
+
+### Part 2: Use the function `det()` to calculate the determinant of the matrix and assign that value to the variable `my_determinant`.
+
+```{r}
+# Calculate the determinant of mat2
+
+my_determinant <- 
+
+
+```
+
+
+### Part 3: Calculate the euclidean and canberra distances for your matrix and assign the values to the variables
+`my_dist_eucl` and
+`my_dist_canb`
+
+```{r}
+
+# replace xxxxxx with the appropriate method
+my_dist_eucl <- dist(mat2, method = "xxxxxxx")
+  
+# figure out how to get the canberra distance for mat2
+my_dist_canb <- 
+
+
+```
+
+
 # Examining Relationships among Variables and Clustering
 
 In [this paper](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0090081), Gorman et al. study characteristics of penguin populations in the Antarctic. We'll be looking at a dataset of penguin body measurements available in the `palmerpenguins` package. 
@@ -308,6 +353,38 @@ fviz_cluster(km_2, data = small.df,
 )
 ```
 Note that the axes changed. Instead of ploting by the numbers explicitly in the dataset, we are now plotting by how the data varied among the measurements.
+
+
+## mini-DREAM submission question 2
+
+In the code chunk above, run k-means for 3 clusters. In other words, set `km_2` to 3.
+How many points are in each cluster?  Assign them:
+
+```{r}
+
+# assign the appropriate values:
+my_cluster1 <- 
+my_cluster2 <- 
+my_cluster3 <- 
+
+
+```
+
+
+Submit answers to Synapse 
+```{r}
+# Load function to submitting answers to the leader board
+scripts_dir <- "/home/shared/R"
+source(file.path(scripts_dir, "submission_helpers.R"))
+
+# Log into Synapse
+synLoginSecure()  # You might be prompted for your username and password
+
+# Submit answers
+submission <- submit_module_answers(module = 3)
+```
+
+
 
 Let's go back and look at the penguins dataset 
 
