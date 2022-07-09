@@ -23,6 +23,7 @@ score_submission <- function(submission_filename) {
   cluster2_actual <- as.integer(2)
   cluster3_actual <- as.integer(3)
 
+
   if (determinant_guess == determinant_actual){
     determinant_msg <- "Nailed it!"
   } else {
@@ -41,22 +42,34 @@ score_submission <- function(submission_filename) {
     dist_canberra_msg <- "Your answer is incorrect"
   }
 
-  if (cluster1_guess == cluster1_actual){
-    cluster1_msg <- "Nailed it!"
+  if (is.null(cluster1_guess)){
+    cluster1_msg <- "No result submitted"
   } else {
-    cluster1_msg <- "Your answer is incorrect"
+      if (cluster1_guess == cluster1_actual){
+        cluster1_msg <- "Nailed it!"
+      } else {
+        cluster1_msg <- "Your answer is incorrect"
+      }
   }
 
-  if (cluster2_guess == cluster2_actual){
-    cluster2_msg <- "Nailed it!"
+  if (is.null(cluster2_guess)){
+    cluster2_msg <- "No result submitted"
   } else {
-    cluster2_msg <- "Your answer is incorrect"
+      if (cluster2_guess == cluster2_actual){
+        cluster2_msg <- "Nailed it!"
+      } else {
+        cluster2_msg <- "Your answer is incorrect"
+      }
   }
 
-  if (cluster3_guess == cluster3_actual){
-    cluster3_msg <- "Nailed it!"
+  if (is.null(cluster3_guess)){
+    cluster3_msg <- "No result submitted"
   } else {
-    cluster3_msg <- "Your answer is incorrect"
+      if (cluster3_guess == cluster3_actual){
+        cluster3_msg <- "Nailed it!"
+        } else {
+        cluster3_msg <- "Your answer is incorrect"
+        }
   }
 
   answers["determinant_msg"] <- determinant_msg

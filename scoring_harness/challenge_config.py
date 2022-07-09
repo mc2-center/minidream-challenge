@@ -95,7 +95,12 @@ def score(submission):
     #         f.write(entity_annots['yaml'][0])
 
     results = scoring_func(submission.filePath)
-    annotations = {key:value[0] for key, value in zip(results.names, results)}
+    #annotations = {key:value[0] for key, value in zip(results.names, results)}
+    annotations = {}
+    for key, value in zip(results.names, results):
+        if key and value:
+            annotations[key]=value[0]
+
     annotations['module'] = "Module %s" % moduleNo
     annotations['userName'] = userName
     return(annotations)

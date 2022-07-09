@@ -56,9 +56,17 @@ create_module3_submission <- function() {
   determinant_n <<- my_determinant
   dist_euclidean <<- my_dist_eucl
   dist_canberra <<- my_dist_canb
-  cluster1<<- my_cluster1
-  cluster2<<- my_cluster2
-  cluster3<<- my_cluster3
+
+  if (exists("my_cluster1") && exists("my_cluster2") && exists("my_cluster3")){
+      cluster1<<- my_cluster1
+      cluster2<<- my_cluster2
+      cluster3<<- my_cluster3
+  } else {
+    cluster1 <- NULL
+    cluster2 <- NULL
+    cluster3 <- NULL
+
+  }
   
   answers <- list(
     determinant_n = determinant_n, 

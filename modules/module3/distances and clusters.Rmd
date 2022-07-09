@@ -122,6 +122,20 @@ my_dist_canb <-
 
 ```
 
+Submit answers for Q1 (part 2 and part 3)
+
+```{r}
+# Load function to submitting answers to the leader board
+scripts_dir <- "/home/shared/R"
+source(file.path(scripts_dir, "submission_helpers.R"))
+
+# Log into Synapse
+synLoginSecure()  # You might be prompted for your username and password
+
+# Submit answers
+submission <- submit_module_answers(module = 3)
+```
+
 
 # Examining Relationships among Variables and Clustering
 
@@ -371,7 +385,7 @@ my_cluster3 <-
 ```
 
 
-Submit answers to Synapse 
+Submit answers for Q2
 ```{r}
 # Load function to submitting answers to the leader board
 scripts_dir <- "/home/shared/R"
