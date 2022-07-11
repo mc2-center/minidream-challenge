@@ -34,23 +34,28 @@ Let's measure distances in different ways.
 dist(mat, method = "manhattan")
 ```
 
+
 ```{r}
 #calculate the Euclidean distance between each row in matrix
 #note - Euclidean is the default distance so no method definition is needed 
 dist(mat)
 ```
 
+
 ```{r}
 #calculate another Minkowski distance between each row in matrix (in this case we will use p = 3)
 dist(mat, method="minkowski", p=3)
 ```
+
 
 ```{r}
 #calculate Canberra distance (weighted Manhattan distance) between each row in matrix
 dist(mat, method="canberra")
 ```
 
+
 What if our data is not all "close" in values?
+
 ```{r}
 #define four similar vectors again (except one)
 a <- c(2, 4, 6, 8)
@@ -65,22 +70,30 @@ mat <- rbind(a, b, c, d)
 mat
 ```
 
+
 ```{r}
 #calculate the absolute value of the distance 
 dist(mat, method = "manhattan")
 ```
 
+
 ```{r}
 #Remember this is a weighted method (weighted Manhattan distance) between each row in matrix
 dist(mat, method="canberra")
 ```
+
+
 The "weighted" distance seems to scale the distance measures - this could be very important when dealing with data that varies considerably. 
 
 So scaling can be important when using values that are different orders of magnitude. You will see Thurs that gene expression values can and do vary by orders of magnitude so scaling the data is necessary for any reasonable analysis.
 
 ## mini-DREAM submission question 1
 
-### Part 1: Create a 2x2 matrix such that row 1 contains 2 and 4, and row 2 contains 100 and 200.
+### Part 1: 
+Create a 2x2 matrix such that 
+
+* row 1 contains 2 and 4, and 
+* row 2 contains 100 and 200.
 
 
 ```{r}
@@ -88,9 +101,11 @@ So scaling can be important when using values that are different orders of magni
 # Create a 2 by 2 matrix by binding row1 with row2
 row1 <- 
 
-row2 <-
+row2 <- 
   
 mat2 <- 
+
+mat2
   
 
 ```
@@ -101,7 +116,9 @@ mat2 <-
 ```{r}
 # Calculate the determinant of mat2
 
-my_determinant <- 
+my_determinant <- det(mat2)
+
+my_determinant
 
 
 ```
@@ -114,15 +131,24 @@ my_determinant <-
 ```{r}
 
 # replace xxxxxx with the appropriate method
-my_dist_eucl <- dist(mat2, method = "xxxxxxx")
+my_dist_eucl <- dist(mat2, method = "xxxxxx")
   
-# figure out how to get the canberra distance for mat2
-my_dist_canb <- 
-
+my_dist_eucl
 
 ```
 
-Submit answers for Q1 (part 2 and part 3)
+
+#### Submit answers for Q1 (part 2 and part 3)
+
+```{r}
+
+# figure out how to get the canberra distance for mat2
+my_dist_canb <- 
+
+my_dist_canb
+
+```
+
 
 ```{r}
 # Load function to submitting answers to the leader board
@@ -160,7 +186,9 @@ The raw data, accessed from the [Environmental Data Initiative](https://environm
 glimpse(penguins)
 ```
 
+
 Try something simple first to see if we can see relationships among the variables:
+
 ```{r}
 # Plot 2 of the variables:
 plot(penguins$flipper_length_mm, penguins$body_mass_g)
@@ -170,15 +198,19 @@ lm(penguins$body_mass_g ~ penguins$flipper_length_mm)
 abline(lm(penguins$body_mass_g ~ penguins$flipper_length_mm), col = "red")
 ```
 
+
 Body mass and flipper length seem related. What is the correlation coefficient?
 ```{r}
 cor(penguins$body_mass_g, penguins$flipper_length_mm)
 ```
 
+
 Hmmm - can we fix this?
 ```{r}
 cor(penguins$body_mass_g, penguins$flipper_length_mm, use = "complete.obs")
 ```
+
+
 So besides direct measures of distances between points/vectors, correlations using all the points in a dataset are good measures of how variables might be related too.
 
 Exploring scatterplots:
@@ -191,6 +223,8 @@ penguins %>%
   dplyr::select(body_mass_g, ends_with("_mm")) %>% 
   glimpse()
 ```
+
+
 Hmmm... there are all those "NA's" - let's 'clean' up the dataset first by removing  them.
 
 ```{r}
@@ -198,6 +232,7 @@ penguins1 <- na.omit(penguins)
 
 glimpse(penguins1)
 ```
+
 
 Now, let's look at something specific where we include some metadata (species) in our visualization:
 Penguin mass vs. flipper length
@@ -225,6 +260,7 @@ ggplot(data = penguins1,
   geom_smooth(method = "lm", se = FALSE, color = "gray50")
 ```
 
+
 Example of Simpson's paradox: confounding data:  
 ```{r}
 ggplot(data = penguins1,
@@ -245,6 +281,7 @@ ggplot(data = penguins1,
         plot.caption.position = "plot") +
   geom_smooth(method = "lm", se = FALSE, color = "gray50")
 ```
+
 
 Bill length vs. depth within species
 ```{r}
@@ -272,6 +309,7 @@ ggplot(data = penguins1,
         plot.caption.position = "plot")
 ```
 
+
 Let's go back and look at mass v. flipper by species 
 ```{r}
 ggplot(data = penguins1, 
@@ -296,6 +334,8 @@ ggplot(data = penguins1,
         plot.caption = element_text(hjust = 0, face= "italic"),
         plot.caption.position = "plot") 
 ```
+
+
 Ok now let's take a minute to look at other ways of representing data.
 
 Flipper lengths violin plots - a common display type for high demensional data plus jitter so you can see all the datapoints (could do a statistical test to see if variation was significant): 
@@ -308,6 +348,8 @@ ggplot(data = penguins1, aes(x = species, y = flipper_length_mm)) +
   labs(x = "Species",
        y = "Flipper length (mm)")
 ```
+
+
 This is a nice dataset to explore and we can gain an understanding of how the biological variables as the dataset are related and differ. However, it is not too large and we can have an intuitive understanding of the ways they could relate to each other. 
 
 In fact, we could explore all the correlations at once.
@@ -318,6 +360,8 @@ penguins1 %>%
   scale_colour_manual(values = c("darkorange","purple","cyan4")) +
   scale_fill_manual(values = c("darkorange","purple","cyan4"))
 ```
+
+
 A lot of info and kind of a mess but we probably have an intuitive sense of how we might explore this dataset. If we didn't know the particular measurements related to something biologically and we pretend that we just have a bunch of data, we might want to look at this data differently. We might hypothesize that it might be structured in some way and we might try to "cluster" the data to learn something about it's structure. 
 
 Overview of clustering  - including more techniques
@@ -350,6 +394,8 @@ ggplot(small.df, aes(x = measure1, y = measure2)) +
     geom_point() + 
     geom_text(aes(label = 1:5), vjust = 1.5)
 ```
+
+
 Looking at the plot, you might imagine that there are 2 distinct groups of datapoints.
 
 Let's see what that would look like using k-means clustering.
@@ -366,12 +412,14 @@ fviz_cluster(km_2, data = small.df,
              ggtheme = theme_bw()
 )
 ```
+
 Note that the axes changed. Instead of ploting by the numbers explicitly in the dataset, we are now plotting by how the data varied among the measurements.
 
 
-## mini-DREAM submission question 2
+### mini-DREAM submission question 2
 
-In the code chunk above, run k-means for 3 clusters. In other words, set `km_2` to 3.
+In the code chunk above, run k-means for 3 clusters. In other words, for the object km_2, in the function `kmeans`, set the argument "centers" to 3.
+
 How many points are in each cluster?  Assign them:
 
 ```{r}
@@ -385,7 +433,8 @@ my_cluster3 <-
 ```
 
 
-Submit answers for Q2
+#### Submit answers for Q2
+
 ```{r}
 # Load function to submitting answers to the leader board
 scripts_dir <- "/home/shared/R"
