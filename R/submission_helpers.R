@@ -106,23 +106,22 @@ create_module3_submission <- function() {
 create_module4_submission <- function() {
   submission_filename <- paste(Sys.getenv("USER"), "activity-4.yml", sep = "_")
   
-  model_gene <<- my_model_gene
-  gene_relationship <<- my_gene_relationship
-  gene_significance <<- my_gene_significance
-  model_judgement <<- my_model_judgement
-  prediction <<- my_prediction
+  distance_metric <<- my_distance_metric
+  cluster_method <<- my_cluster_method
+  num_clusters <<- my_num_clusters
+  p_value <<- my_p_value
   
   answers <- list(
-    model_gene = model_gene, 
-    gene_relationship = gene_relationship,
-    gene_significance = gene_significance,
-    model_judgement = model_judgement,
-    prediction = prediction
+    distance_metric = distance_metric, 
+    cluster_method = cluster_method,
+    num_clusters = num_clusters,
+    p_value = p_value
   )
   
   write_yaml(answers, submission_filename)
   submission_filename
 }
+
 
 create_module5_submission <- function() {
   submission_filename <- paste(Sys.getenv("USER"), "activity-5.yml", sep = "_")
