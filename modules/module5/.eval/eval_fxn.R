@@ -1,55 +1,51 @@
 library(yaml)
 library(tidyverse)
+library(lubridate)
 library(glue)
-library(rprojroot)
 
 
 score_submission <- function(submission_filename) {
+  answers <- yaml.load_file(submission_filename)
   
-  answers <- yaml.load_file(submission_filename) %>% 
-    map(str_trim)
-  gene_count <- as.integer(answers$gene_count)
-  gc_actual <- 497L
-  count_match <- gene_count == gc_actual
-  msg_1 <- glue("I ended up with {gc} genes in my gene list.", 
-                gc = gc_actual)
-  
-  go_results <- list(
-    BP = list(
-      name = "biological process",
-      top_go_id = "GO:0022612",
-      go_description = "gland morphogenesis"
-    ),
-    MF = list(
-      name = "molecular function",
-      top_go_id = "GO:0005520",
-      go_description = "insulin-like growth factor binding"
-    ),
-    CC = list(
-      name = "cellular component",
-      top_go_id = "GO:0005912",
-      go_description = "adherens junction"
-    )
-  )
-  
-  go_subontology <- answers$go_subontology
-  if (is.null(go_subontology)) {
-    go_subontology <- go_results %>% 
-      keep(~ .$top_go_id == answers$top_go_id) %>% 
-      names()
-    answers$go_subontology <- go_subontology
-  }
-  
-  go_values <- go_results[[go_subontology]]
-  msg_2 <- glue("For {name} ({subont}), I found that '{term}' ({id}) was the ",
-                "most over-represented GO term",
-                name = go_values$name,
-                subont = go_subontology,
-                term = go_values$go_description,
-                id = go_values$top_go_id)
-    
+  nc_bound_final_guess <- answers$nc_bound_final
+  time_half_guess <- answers$time_half
+  unbound_freq_guess <- answers$unbound_freq
+  mforce_mean_guess <- answers$mforce_mean
 
-  answers["comment"] <- paste(msg_1, msg_2)
+
+
+  if (nc_bound_final_guess > 65 && nc_bound_final_guess < 70){
+    nc_bound_mesg <- "Nailed it!"
+  } else {
+    nc_bound_mesg <- "Your answer was not correct."
+  }
+
+
+  if (time_half_guess > 0.6 && time_half_guess < 0.7){
+    time_half_mesg <- "Nailed it!"
+  } else {
+    time_half_mesg <- "Your answer was not correct."
+  }
+
+  if (unbound_freq_guess > 5 && unbound_freq_guess < 10){
+    unbound_freq_mesg <- "Nailed it"
+  } else {
+    unbound_freq_mesg <- "Your answer was not correct"
+  }
+
+  if (mforce_mean_guess > 20 && mforce_mean_guess < 22){
+    mforce_mean_mesg <- "Nailed it"
+  } else {
+    mforce_mean_mesg <- "Your answer was not correct"
+  }
+
+
+
+
+  answers["nc_bound_mesg"] <- nc_bound_mesg
+  answers["time_half_mesg"] <- time_half_mesg
+  answers["unbound_freq_mesg"] <- unbound_freq_mesg
+  answers["mforce_mean_mesg"] <- mforce_mean_mesg
+
   answers
 }
-

@@ -126,20 +126,18 @@ create_module4_submission <- function() {
 create_module5_submission <- function() {
   submission_filename <- paste(Sys.getenv("USER"), "activity-5.yml", sep = "_")
   
-  gene_count <<- my_gene_count
-  go_subontology <<- my_go_subontology
-  top_go_id <<- my_top_go_id
-  go_description <<- my_go_description
-  fav_go_term <<- my_fav_go_term
-  rationale <<- my_rationale
+  nc_bound_final <<- nc_bound_final
+  time_half <<- time_half
+  unbound_freq <<- unbound_freq
+  mforce_mean <<- mforce_mean
+
+
   
   answers <- list(
-    gene_count = gene_count, 
-    go_subontology = go_subontology,
-    top_go_id = top_go_id, 
-    go_description = go_description, 
-    fav_go_term = fav_go_term,
-    rationale = rationale
+    nc_bound_final = nc_bound_final,
+    time_half = time_half, 
+    unbound_freq = unbound_freq,
+    mforce_mean = mforce_mean
   )
   
   write_yaml(answers, submission_filename)
@@ -149,22 +147,17 @@ create_module5_submission <- function() {
 create_module6_submission <- function() {
   submission_filename <- paste(Sys.getenv("USER"), "activity-6.yml", sep = "_")
 
-  nc_bound_final_sub <<- nc_bound_final
-  time_half_sub <<- time_half
-  unbound_freq_sub <<- unbound_freq
-  mforce_mean_sub <<- mforce_mean
-  unbound_freq_deform_sub <<- unbound_freq_deform
-  mforce_mean_deform_sub <<- mforce_mean_deform
-  Equation_SubDeform_MForce_sub <<- Equation_SubDeform_MForce
+
+  unbound_freq_deform <<- unbound_freq_deform
+  mforce_mean_deform<<- mforce_mean_deform
+  optimal_stiffness <<- optimal_stiffness
+  traction_ratio <<- traction_ratio
   
   answers <- list(
-    nc_bound_final = nc_bound_final_sub,
-    time_half = time_half_sub,
-    unbound_freq = unbound_freq_sub,
-    mforce_mean = mforce_mean_sub,
-    unbound_freq_deform = unbound_freq_deform_sub,
-    mforce_mean_deform = mforce_mean_deform_sub,
-    Equation_SubDeform_MForce = Equation_SubDeform_MForce_sub
+    unbound_freq_deform = unbound_freq_deform,
+    mforce_mean_deform = mforce_mean_deform,
+    optimal_stiffness = optimal_stiffness,
+    traction_ratio = traction_ratio
   )
   
   write_yaml(answers, submission_filename)
