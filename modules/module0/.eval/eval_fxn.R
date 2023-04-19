@@ -8,7 +8,7 @@ score_submission <- function(submission_filename) {
   answers <- yaml.load_file(submission_filename)
   
   bday_guess <- parse_date_time(answers$bday, "md")
-  bday_actual <- parse_date_time("06/09", "md")
+  bday_actual <- parse_date_time("05/25", "md")
   bday_diff <- bday_guess - bday_actual
   if (as.numeric(bday_diff) < 0) {
     bday_msg <- glue("Your guess was {d} days too early.",
@@ -18,7 +18,7 @@ score_submission <- function(submission_filename) {
                     d = abs(as.numeric(bday_diff)))
   }
   
-  age_actual <- 32L
+  age_actual <- 30L
   age_diff <- as.integer(answers$age) - age_actual
   if (age_diff > 0) {
     age_msg <- glue("You overshot by {d} years.", d = age_diff)
