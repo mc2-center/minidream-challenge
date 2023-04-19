@@ -1,4 +1,4 @@
-name: minidream-2021
+name: minidream-2022
 channels:
   - conda-forge
   - bioconda
@@ -247,4 +247,4 @@ dependencies:
   - zipp=3.4.1
   - zlib=1.2.11
   - zstd=1.5.0
-prefix: /home/bgrande/miniconda3/envs/minidream-2021
+prefix: /home/lpeng/miniconda3/envs/minidream-2022

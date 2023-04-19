@@ -1,0 +1,642 @@
+---
+title: "distances and clustering"
+assembled by: Philip Moos and Jeff Chang
+output: html_notebook
+---
+
+# Distances in vectors. 
+
+The basic R command for determining the distance between vectors in a matrix is 'dist'. You can specify the distance measure to use. Default is “euclidean” but options include “maximum”, “manhattan”, “canberra”, “binary” or “minkowski”.
+
+To learn more about distance metrics:
+https://www.youtube.com/watch?v=9hWDB_054yI
+https://www.youtube.com/watch?v=_EEcjn0Uirw
+https://statisticsglobe.com/dist-function-in-r/
+
+Let's get started with some simple vectors and make a matrix.
+```{r}
+#let's define four vectors
+a <- c(2, 4, 6, 8)
+b <- c(3, 5, 7, 9)
+c <- c(5, 5, 5, 5)
+d <- c(1, 2, 3, 4)
+
+#row bind four vectors into matrix
+mat <- rbind(a, b, c, d)
+
+#view matrix
+mat
+```
+
+Let's measure distances in different ways.
+```{r}
+#calculate the absolute value of the distance between the vectors
+dist(mat, method = "manhattan")
+```
+
+
+```{r}
+#calculate the Euclidean distance between each row in matrix
+#note - Euclidean is the default distance so no method definition is needed 
+dist(mat)
+```
+
+
+```{r}
+#calculate another Minkowski distance between each row in matrix (in this case we will use p = 3)
+dist(mat, method="minkowski", p=3)
+```
+
+
+```{r}
+#calculate Canberra distance (weighted Manhattan distance) between each row in matrix
+dist(mat, method="canberra")
+```
+
+
+What if our data is not all "close" in values?
+
+```{r}
+#define four similar vectors again (except one)
+a <- c(2, 4, 6, 8)
+b <- c(3, 5, 7, 9)
+c <- c(5, 5, 5, 5)
+d <- c(100, 200, 300, 400)
+
+#row bind four vectors into matrix
+mat <- rbind(a, b, c, d)
+
+#view matrix
+mat
+```
+
+
+```{r}
+#calculate the absolute value of the distance 
+dist(mat, method = "manhattan")
+```
+
+
+```{r}
+#Remember this is a weighted method (weighted Manhattan distance) between each row in matrix
+dist(mat, method="canberra")
+```
+
+
+The "weighted" distance seems to scale the distance measures - this could be very important when dealing with data that varies considerably. 
+
+So scaling can be important when using values that are different orders of magnitude. You will see Thurs that gene expression values can and do vary by orders of magnitude so scaling the data is necessary for any reasonable analysis.
+
+## mini-DREAM submission question 1
+
+### Part 1: 
+Create a 2x2 matrix such that 
+
+* row 1 contains 2 and 4, and 
+* row 2 contains 100 and 200.
+
+
+```{r}
+
+# Create a 2 by 2 matrix by binding row1 with row2
+row1 <- 
+
+row2 <- 
+  
+mat2 <- 
+
+mat2
+  
+
+```
+
+
+### Part 2: Use the function `det()` to calculate the determinant of the matrix and assign that value to the variable `my_determinant`.
+
+```{r}
+# Calculate the determinant of mat2
+
+my_determinant <- det(mat2)
+
+my_determinant
+
+
+```
+
+
+### Part 3: Calculate the euclidean and canberra distances for your matrix and assign the values to the variables
+`my_dist_eucl` and
+`my_dist_canb`
+
+```{r}
+
+# replace xxxxxx with the appropriate method
+my_dist_eucl <- dist(mat2, method = "xxxxxx")
+  
+my_dist_eucl
+
+```
+
+
+#### Submit answers for Q1 (part 2 and part 3)
+
+```{r}
+
+# figure out how to get the canberra distance for mat2
+my_dist_canb <- 
+
+my_dist_canb
+
+```
+
+
+```{r}
+# Load function to submitting answers to the leader board
+scripts_dir <- "/home/shared/R"
+source(file.path(scripts_dir, "submission_helpers.R"))
+
+# Log into Synapse
+synLoginSecure()  # You might be prompted for your username and password
+
+# Submit answers
+submission <- submit_module_answers(module = 3)
+```
+
+
+# Examining Relationships among Variables and Clustering
+
+In [this paper](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0090081), Gorman et al. study characteristics of penguin populations in the Antarctic. We'll be looking at a dataset of penguin body measurements available in the `palmerpenguins` package. 
+
+Our goal in using this data is to better understand relationships among data sets and how clustering can help us think about complex datasets.
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(palmerpenguins)
+data(penguins)
+```
+
+Meet the penguins
+
+These data were collected from 2007 - 2009 by Dr. Kristen Gorman with the [Palmer Station Long Term Ecological Research Program](https://pal.lternet.edu/), part of the [US Long Term Ecological Research Network](https://lternet.edu/). The data were imported directly from the [Environmental Data Initiative](https://environmentaldatainitiative.org/) (EDI) Data Portal, and are available for use by CC0 license ("No Rights Reserved") in accordance with the [Palmer Station Data Policy](https://pal.lternet.edu/data/policies). 
+
+The raw data, accessed from the [Environmental Data Initiative](https://environmentaldatainitiative.org/) (see full data citations below), is also available as `palmerpenguins::penguins_raw`.
+
+```{r}
+glimpse(penguins)
+```
+
+
+Try something simple first to see if we can see relationships among the variables:
+
+```{r}
+# Plot 2 of the variables:
+plot(penguins$flipper_length_mm, penguins$body_mass_g)
+# Is there a linear relationship among these variables? Find the linear regression or linear model (lm)
+lm(penguins$body_mass_g ~ penguins$flipper_length_mm)
+# Add the line representing the linear model
+abline(lm(penguins$body_mass_g ~ penguins$flipper_length_mm), col = "red")
+```
+
+
+Body mass and flipper length seem related. What is the correlation coefficient?
+```{r}
+cor(penguins$body_mass_g, penguins$flipper_length_mm)
+```
+
+
+Hmmm - can we fix this?
+```{r}
+cor(penguins$body_mass_g, penguins$flipper_length_mm, use = "complete.obs")
+```
+
+
+So besides direct measures of distances between points/vectors, correlations using all the points in a dataset are good measures of how variables might be related too.
+
+Exploring scatterplots:
+
+The `penguins` data has four continuous variables, making six unique scatterplots possible! We will focus on a couple of them. You can look specifically at others yourself later. 
+Let's also take a look at the continuous variables again.
+
+```{r}
+penguins %>%
+  dplyr::select(body_mass_g, ends_with("_mm")) %>% 
+  glimpse()
+```
+
+
+Hmmm... there are all those "NA's" - let's 'clean' up the dataset first by removing  them.
+
+```{r}
+penguins1 <- na.omit(penguins)
+
+glimpse(penguins1)
+```
+
+
+Now, let's look at something specific where we include some metadata (species) in our visualization:
+Penguin mass vs. flipper length
+```{r}
+ggplot(data = penguins1, 
+                       aes(x = flipper_length_mm,
+                           y = body_mass_g)) +
+  geom_point(aes(color = species, 
+                 shape = species),
+             size = 3,
+             alpha = 0.8) +
+    theme_minimal() +
+  scale_color_manual(values = c("darkorange","purple","cyan4")) +
+  labs(title = "Penguin size, Palmer Station LTER",
+       subtitle = "Flipper length and body mass for Adelie, Chinstrap and Gentoo Penguins",
+       x = "Flipper length (mm)",
+       y = "Body mass (g)",
+       color = "Penguin species",
+       shape = "Penguin species") +
+  theme(legend.position = c(0.2, 0.7),
+        legend.background = element_rect(fill = "white", color = NA),
+        plot.title.position = "plot",
+        plot.caption = element_text(hjust = 0, face= "italic"),
+        plot.caption.position = "plot") +
+  geom_smooth(method = "lm", se = FALSE, color = "gray50")
+```
+
+
+Example of Simpson's paradox: confounding data:  
+```{r}
+ggplot(data = penguins1,
+                         aes(x = bill_length_mm,
+                             y = bill_depth_mm)) +
+ geom_point(aes(color = species, 
+                 shape = species),
+             size = 3,
+             alpha = 0.8) +
+  theme_minimal() +
+  scale_color_manual(values = c("darkorange","purple","cyan4")) +
+  labs(title = "Penguin bill dimensions",
+       subtitle = "Palmer Station LTER",
+       x = "Bill length (mm)",
+       y = "Bill depth (mm)") +
+  theme(plot.title.position = "plot",
+        plot.caption = element_text(hjust = 0, face= "italic"),
+        plot.caption.position = "plot") +
+  geom_smooth(method = "lm", se = FALSE, color = "gray50")
+```
+
+
+Bill length vs. depth within species
+```{r}
+ggplot(data = penguins1,
+                         aes(x = bill_length_mm,
+                             y = bill_depth_mm,
+                             group = species)) +
+  geom_point(aes(color = species, 
+                 shape = species),
+             size = 3,
+             alpha = 0.8) +
+  geom_smooth(method = "lm", se = FALSE, aes(color = species)) +
+  theme_minimal() +
+  scale_color_manual(values = c("darkorange","purple","cyan4")) +
+  labs(title = "Penguin bill dimensions",
+       subtitle = "Bill length and depth for Adelie, Chinstrap and Gentoo Penguins at Palmer Station LTER",
+       x = "Bill length (mm)",
+       y = "Bill depth (mm)",
+       color = "Penguin species",
+       shape = "Penguin species") +
+  theme(legend.position = c(0.85, 0.15),
+        legend.background = element_rect(fill = "white", color = NA),
+        plot.title.position = "plot",
+        plot.caption = element_text(hjust = 0, face= "italic"),
+        plot.caption.position = "plot")
+```
+
+
+Let's go back and look at mass v. flipper by species 
+```{r}
+ggplot(data = penguins1, 
+                       aes(x = flipper_length_mm,
+                           y = body_mass_g)) +
+  geom_point(aes(color = species, 
+                 shape = species),
+             size = 3,
+             alpha = 0.8) +
+    theme_minimal() +
+  geom_smooth(method = "lm", se = FALSE, aes(color = species)) +
+  scale_color_manual(values = c("darkorange","purple","cyan4")) +
+  labs(title = "Penguin size, Palmer Station LTER",
+       subtitle = "Flipper length and body mass for Adelie, Chinstrap and Gentoo Penguins",
+       x = "Flipper length (mm)",
+       y = "Body mass (g)",
+       color = "Penguin species",
+       shape = "Penguin species") +
+  theme(legend.position = c(0.2, 0.7),
+        legend.background = element_rect(fill = "white", color = NA),
+        plot.title.position = "plot",
+        plot.caption = element_text(hjust = 0, face= "italic"),
+        plot.caption.position = "plot") 
+```
+
+
+Ok now let's take a minute to look at other ways of representing data.
+
+Flipper lengths violin plots - a common display type for high demensional data plus jitter so you can see all the datapoints (could do a statistical test to see if variation was significant): 
+```{r}
+ggplot(data = penguins1, aes(x = species, y = flipper_length_mm)) +
+  geom_violin(aes(color = species), width = 0.3, show.legend = FALSE) +
+  geom_jitter(aes(color = species), alpha = 0.5, show.legend = FALSE, position = position_jitter(width = 0.2, seed = 0)) +
+  scale_color_manual(values = c("darkorange","purple","cyan4")) +
+  theme_minimal() +
+  labs(x = "Species",
+       y = "Flipper length (mm)")
+```
+
+
+This is a nice dataset to explore and we can gain an understanding of how the biological variables as the dataset are related and differ. However, it is not too large and we can have an intuitive understanding of the ways they could relate to each other. 
+
+In fact, we could explore all the correlations at once.
+```{r penguin-pairs, eval=FALSE}
+penguins1 %>%
+  select(species, body_mass_g, ends_with("_mm"), island, sex) %>% 
+  GGally::ggpairs(aes(color = species)) +
+  scale_colour_manual(values = c("darkorange","purple","cyan4")) +
+  scale_fill_manual(values = c("darkorange","purple","cyan4"))
+```
+
+
+A lot of info and kind of a mess but we probably have an intuitive sense of how we might explore this dataset. If we didn't know the particular measurements related to something biologically and we pretend that we just have a bunch of data, we might want to look at this data differently. We might hypothesize that it might be structured in some way and we might try to "cluster" the data to learn something about it's structure. 
+
+Overview of clustering  - including more techniques
+https://scikit-learn.org/stable/modules/clustering.html 
+https://en.wikipedia.org/wiki/Cluster_analysis
+
+The `kmeans()` function in R performs k-means clustering.
+
+To learn more about k-means clustering:
+https://www.youtube.com/watch?v=4b5d3muPQmA
+Here is a web based visualizer to get a handle on what k-means does:
+https://stanford.edu/class/engr108/visualizations/kmeans/kmeans.html
+
+We will also make a change to the visualization library to make it easier to see the "clusters".
+```{r}
+library(ggfortify)
+library(factoextra)
+```
+
+Let's start with making a small data frame we can easily visualize graphically as an example.
+```{r }
+# NOTE: these data do not require scaling
+small.df <- data.frame(
+    measure1 = c(2.5, 2.7, 3.2, 3.5, 3.6),
+    measure2 = c(5.5, 6.0, 4.5, 5.0, 4.7)
+)
+small.df
+
+ggplot(small.df, aes(x = measure1, y = measure2)) +
+    geom_point() + 
+    geom_text(aes(label = 1:5), vjust = 1.5)
+```
+
+
+Looking at the plot, you might imagine that there are 2 distinct groups of datapoints.
+
+Let's see what that would look like using k-means clustering.
+```{r}
+# Run k-means for k = centers = 2
+set.seed(123)
+km_2 <- kmeans(small.df, centers = 2)
+
+#add visualization
+fviz_cluster(km_2, data = small.df, 
+             palette = "ngp",      
+             geom = "point",
+             ellipse.type = "convex",
+             ggtheme = theme_bw()
+)
+```
+
+Note that the axes changed. Instead of ploting by the numbers explicitly in the dataset, we are now plotting by how the data varied among the measurements.
+
+
+### mini-DREAM submission question 2
+
+In the code chunk above, run k-means for 3 clusters. In other words, for the object km_2, in the function `kmeans`, set the argument "centers" to 3.
+
+How many points are in each cluster?  Assign them:
+
+```{r}
+
+# assign the appropriate values:
+my_cluster1 <- 
+my_cluster2 <- 
+my_cluster3 <- 
+
+
+```
+
+
+#### Submit answers for Q2
+
+```{r}
+# Load function to submitting answers to the leader board
+scripts_dir <- "/home/shared/R"
+source(file.path(scripts_dir, "submission_helpers.R"))
+
+# Log into Synapse
+synLoginSecure()  # You might be prompted for your username and password
+
+# Submit answers
+submission <- submit_module_answers(module = 3)
+```
+
+
+
+Let's go back and look at the penguins dataset 
+
+Let's run k-means for k = 3 clusters - after all there are 3 species right? 
+```{r}
+# Let's select just the bill length and depth variables first
+penguins_sub <- penguins1 %>%
+    select(bill_length_mm, bill_depth_mm)
+
+# Run k-means for k = centers = 3
+set.seed(123)
+km_3 <- kmeans(penguins_sub, centers = 3)
+
+#add visualization
+fviz_cluster(km_3, data = penguins_sub, 
+             palette = "ngp",      
+             geom = "point",
+             ellipse.type = "convex",
+             ggtheme = theme_bw()
+)
+```
+So that seems like it might have found them - it certainly suggest that there are multiple subsets.
+
+This might not seem too different from our original scatterplots but let's add back the species and see how the clustering worked.
+```{r}
+#adding back the species 
+penguins_sub$species <- as.factor(penguins1$species)
+
+#Visualize data 
+fviz_cluster(km_3, data = penguins_sub[,-3], 
+             palette = "ngp",      
+             geom = "point",
+             ellipse.type = "convex",
+             ggtheme = theme_bw()
+) +  geom_point(aes(color = penguins_sub$species, 
+                 shape = penguins_sub$species),
+             size = 3,
+             alpha = 0.8)
+```
+This might suggest that we tried to "overfit" the data. One can actually calculate an estimate of the correct value for k - but that is beyond our discussion this morning. 
+
+However, when we have a large dimension dataset we don't generally look at it by pairs of variables at a time. What if we didn't look at this data variable by variable. Let's look at this with all the continuous data at once (i.e. without selecting for some subset of the data)?
+```{r}
+# Select all continuous variables
+penguins_sub <- penguins1 %>%
+    select(body_mass_g, ends_with("_mm"))
+
+# Run k-means for k = centers = 3
+set.seed(123)
+#Note - we are scaling the data since there are very different orders of magnitude
+km_3 <- kmeans(scale(penguins_sub), centers = 3)
+
+#add visualization
+fviz_cluster(km_3, data = penguins_sub, 
+             palette = "ngp",      
+             geom = "point", 
+             ellipse.type = "convex",
+             ggtheme = theme_bw()
+)  
+```
+Not terrible, and in this view, we can see how much of the total variation is being depicted (68.6% on the x-axis, 19.5% on the y-axis - so almost 88% of the variation is represented in the graph).
+
+What about adding back the species?
+```{r}
+#adding back the species 
+penguins_sub$species <- as.factor(penguins1$species)
+
+#Visualize data 
+fviz_cluster(km_3, data = penguins_sub[,-5], 
+             palette = "ngp",      
+             geom = "point",
+             ellipse.type = "convex",
+             ggtheme = theme_bw()
+) +  geom_point(aes(color = penguins_sub$species, 
+                 shape = penguins_sub$species),
+             size = 3,
+             alpha = 0.8)
+```
+
+So actually quite good. You could try other numbers of clusters (k = #) to see how the data falls out - maybe more of the variables in the metadata could be described with different k. 
+
+K-means can be a good method to get an idea of the data structure but a major drawback is that you have to select k upfront. So let's look at some other methods.
+
+The `hclust()` function in R performs agglomerative hierarchical clustering.
+
+To learn more about heirarchical clustering:
+https://www.youtube.com/watch?v=7xHsRkOdVwo&list=PLblh5JKOoLUJo2Q6xK4tZElbIvAACEykp&index=11 
+
+Heirarchical clustering generates denodrograms to visualize the relationships among the data. Let's start with our small data frame as an example (don't worry about the method = "complete" right now).
+```{r}
+small_cluster <- hclust(dist(small.df), method = "complete")
+plot(small_cluster)
+```
+
+This clustering method might be helpful for looking at the penguins. Let's use hierarchical clustering to look at nestings of clusters for the full set of penguins. 
+```{r}
+# put in a visualization of the penguins dataset.
+# Select all continuous variables
+penguins_sub <- penguins1 %>%
+    select(body_mass_g, ends_with("_mm"))
+penguins_cluster <- hclust(dist(scale(penguins_sub)), method = "complete")
+penguins_cluster #to see a summary of what was done
+plot(penguins_cluster, labels = penguins1$species)
+```
+
+This looks like a bit of a mess. Many times, looking at all the data might not be helpful. If a variable doesn't really change much across the data, it doesn't help build the dendrogram. So sometimes, we will only want to look at the most variable data. With the penguins, there are not many datapoints outside a reasonable range so in this case, to make visualization easier, we can also just randomly select a subset to evaluate.
+
+```{r}
+# Random subsample of 50 penguins
+set.seed(321)
+penguins2 <- penguins1 %>%
+    slice_sample(n = 50)
+
+# We will continue to use all the continuous data in clustering
+penguins_sub <- penguins2 %>% 
+  select(body_mass_g, ends_with("_mm"))
+
+# Summary statistics for the variables
+summary(penguins_sub)
+```
+
+
+```{r}
+# Compute a distance matrix (what distance measure are we using?) on the scaled data
+dist_mat_scaled <- dist(scale(penguins_sub))
+
+# The (scaled) distance matrix is the input to hclust()
+# The method argument indicates the linkage type - different ways of measuring the distance among the "branches" of the dendrogram
+hc_complete <- hclust(dist_mat_scaled, method = "complete")
+hc_single <- hclust(dist_mat_scaled, method = "single")
+hc_average <- hclust(dist_mat_scaled, method = "average")
+
+# Plot dendrograms
+plot(hc_complete, labels = penguins2$species)
+plot(hc_single, labels = penguins2$species)
+plot(hc_average, labels = penguins2$species)
+```
+Not a huge difference between the clustering method in this situation. probably due to the significant differences between Gentoo compared to the Chinstrap and Adelie penguins.   
+
+Next session you will investigate gene expression data and do more with visualization of the data with heatmaps. We've been focused on the dendrogram - let's take a quick peak at a heatmap of the distance matrix. Heatmaps are useful for looking at multidimensional data. 
+```{r}
+autoplot(dist_mat_scaled)
+```
+This kinda looks funny but you can already see some "patterns" in the data. The numbers on the left and bottom represent the 50 different penguins. You will do more useful things with heatmaps next time with gene expression data.
+
+Lastly today,  we will use Principal Component Analysis (PCA) 
+
+To lean more about PCA:
+https://www.youtube.com/watch?v=FgakZw6K1QQ&list=PLblh5JKOoLUJo2Q6xK4tZElbIvAACEykp&index=4 
+
+The `prcomp()` function in R performs PCA analysis.
+
+PCA identifies the eigenvectors (axes tranformation based on variation in data) of a matrix and we need to remember to scale the data. We will evaluate PCA of penguins.
+```{r}
+penguin.pca <- prcomp (~  + bill_length_mm + bill_depth_mm + flipper_length_mm + body_mass_g, data=penguins1, scale. = TRUE)
+
+penguin.pca
+```
+
+Let's look at variance of PCA.
+We will use the Eigen function from factoextra.
+```{r}
+fviz_eig(penguin.pca)
+```
+
+Plot the primary principal components.
+```{r}
+#visualize data
+autoplot(penguin.pca, data = penguins1) +
+  
+  geom_point(aes(color = species, 
+                 shape = species),
+             size = 3,
+             alpha = 0.8) +
+    theme_minimal() +
+  scale_color_manual(values = c("darkorange","purple","cyan4"))
+```
+
+
+```{r}
+#visualize data but add the components contribution
+autoplot(penguin.pca, data = penguins1, loadings = TRUE,   loadings.label = TRUE, loadings.label.size = 5) +
+   geom_point(aes(color = species, 
+                 shape = species),
+             size = 3,
+             alpha = 0.8) +
+    theme_minimal() +
+  scale_color_manual(values = c("darkorange","purple","cyan4"))
+```
+With this relatively simple dataset, we can actually see the contributions of the variables to the principal components. In more complex dataset, that becomes increasingly challenging.
+
+There are additional means to cluster data and you will investigate the use of the methods and others in the next session.

@@ -1,0 +1,599 @@
+---
+title: "Exploring relationships among biological variables and observations"
+author: "Jeffrey Chang and Philip Moos"
+date: "7/14/2022"
+output:
+  html_notebook: default
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+
+#knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+# About this activity
+
+In the previous activity, we learned how to 1) load R objects,
+2) convert gene ids, and 3) manipulate and view data frames and matrices.
+We will use these skills and learn new ones.
+
+Every data set has its own unique personality, and whenever
+I am confronted with a new one, I always do an unsupervised analysis
+first to get to know it.  These initial analyses will oftentimes
+reveal idiosyncracies in the data (such as *batch effects*) that may
+confound the interpretation of the results.
+
+Today, we will learn how to cluster gene expression data and visualize it
+with heatmaps.  These are basic, yet powerful, tools that every
+genomics researcher should have in their toolbox.  They can be used to
+tease out the strongest signals in the data, which can tell you
+something about the biology driving the disease.
+
+---
+
+# Loading the data
+
+We will apply unsupervised methods to the TCGA (The Cancer Genome
+Atlas) breast cancer data set.  We have already worked with this data
+in previous models, so I'm not going to spend a lot of time
+re-introducing you to it.  Let's load it in and start playing!
+
+
+```{r}
+# The data we are using is located in this directory
+data_dir <- "/home/data"
+
+# Load the gene expression and clinical data.
+load(file.path(data_dir, "tcga_brca_expr_norm_df.RData"))
+load(file.path(data_dir, "tcga_brca_clinical_df.RData"))
+load(file.path(data_dir, "tcga_brca_cdr_clinical_df.RData"))
+
+# Align the data so that all the samples are in the same order.
+x1 <- names(brca_expr_norm_df)[2:ncol(brca_expr_norm_df)]
+x2 <- brca_clinical_df[["bcr_patient_barcode"]]
+x3 <- brca_cdr_clinical_df[["bcr_patient_barcode"]]
+sample.names <- intersect(intersect(x1, x2), x3)
+sample.names <- sort(sample.names)
+if(is.null(sample.names)) stop("No common samples")
+if(length(sample.names) < 1000) stop("low number of common samples")
+
+I <- match(sample.names, names(brca_expr_norm_df))
+brca_expr_norm_df <- brca_expr_norm_df[,c(1, I)]
+
+I <- match(sample.names, brca_clinical_df[["bcr_patient_barcode"]])
+brca_clinical_df <- brca_clinical_df[I,]
+
+I <- match(sample.names, brca_cdr_clinical_df[["bcr_patient_barcode"]])
+brca_cdr_clinical_df <- brca_cdr_clinical_df[I,]
+
+```
+
+For convenience, we'll pull out just the gene expression values from
+the `brca_expr_norm_df` data frame.  It contains the gene names in the
+first column, and the gene expression values in the following columns.
+Let's pull out the gene expression values as a matrix, which works
+with more mathematical operations.
+
+```{r}
+gene.name <- brca_expr_norm_df[,1]
+X <- as.matrix(brca_expr_norm_df[,2:ncol(brca_expr_norm_df)])
+```
+
+From module 2 a couple of weeks ago, we saw that the gene expression
+data has a long right tail.  We'll transform the data to a more
+normal-ish by taking the log of each expression value [^log_2].
+
+[^log_2]: Expression data is typically logged using base 2.  This
+    makes it easy to look for 2-fold changes, which corresponds to a
+    difference of 1 after logging.  A 2-fold change is commonly
+    considered, as a very rough rule of thumb, to be big enough to be
+    interesting.
+
+
+```{r}
+X.log <- log(X+1, 2)
+print(X[1:5,1:5])
+print(X.log[1:5,1:5])
+
+mean.expr <- apply(X.log, 1, mean)
+hist(mean.expr, breaks=100,
+  main="Distribution of Log_2 Gene Expression Values",
+  xlab="Mean Log_2 Expression")
+```
+
+The data isn't quite normally distributed (especially at the lower
+range), but it is close enough for some exploratory analyses.  So
+let's get started!
+
+---
+
+# Visualizing the data with heatmaps
+
+Let's start by taking a look at what the data looks like using a
+heatmap.  We won't be able to make a heatmap of the entire data
+set — there are just too many genes.
+
+Just to remind ourselves, let's see how big the data is.
+
+```{r}
+# Check the dimensions of `X.log`
+
+dim(X.log)
+
+```
+
+To reduce the number of genes, we will try to select the *most
+important* ones for an exploratory analysis.  There are many different
+ways to do this, and your choice here can lead to profoundly different
+views of the data.  One common approach to select genes in an unbiased
+way is to find the ones with the *biggest differences* across the
+samples, or in statistics language, the ones with the highest variance
+[^gene_selection].  Here, we'll pull out the 500 genes with the
+highest variance.
+
+
+[^gene_selection]: Other unbiased approaches may use other statistical
+    measures, such as selecting ones with highest mean expression,
+    highest interquartile range, etc.  Or, you may choose
+    knowledge-based approaches, for example, using genes known to be
+    expressed in breast tissue, or deregulated in cancer, etc.
+
+
+```{r}
+NUM.GENES <- 500
+v <- apply(X, 1, var)
+O <- order(v, decreasing=TRUE)
+X.log.sub <- X.log[O[1:NUM.GENES],]
+```
+
+Now let's draw the heatmap.  The first thing to know about heatmaps is
+that the R heatmap function [^r_helps] plots the matrix from the
+bottom-up (the last row in the matrix is plotted at the top), which is
+the opposite of what I want.  I want the first row of the matrix to be
+at the top of the heatmap.  Thus, I will first reverse the rows of the
+matrix.
+
+[^r_helps]: You can get help in R, for example, to see what each
+    argument in the heatmap function does, by typing `?heatmap`.
+
+Second, when I'm doing exploratory analysis, I'll often work with just
+a subset of the data.  It makes things go faster, and the plots are
+easier to interpret.  To pull out 10% of the samples, let's store in
+the `I.sample` vector the indexes of every 10th sample.  We'll use
+this subset for now, but for the final analysis, we'll certainly want
+to use the whole data set.
+
+```{r}
+library("RColorBrewer")
+
+I.sample <- seq(1, ncol(X), 10)
+rev <- X.log.sub[nrow(X.log.sub):1, I.sample]
+
+heatmap(
+  rev, Rowv=NA, Colv=NA, scale="none", labRow="",
+  labCol="", col=brewer.pal(10,"RdBu"), margins = c(1, 0))
+```
+
+Each row is a gene, and each column is a sample.  It doesn't quite
+look right, though.  There are a bunch of horizontal stripes.  This
+happens because some of the genes are expressed higher than others.
+While this is interesting, what we really want to see are the patterns
+of expression across the samples.  In other words, we want to know,
+for each gene, whether it is higher in one group of samples versus the
+other.  So we are more interested in the relative expression of the
+genes, rather than the absolute expression.
+
+To get the relative gene expression, we will first normalize each of
+the genes.  A common way to do this is to change each gene such that
+the mean expression is 0, and the variance is 1.  The gene expression
+values normalized this way can be interpreted as *z-scores*, or the
+number of standard deviations arount the mean.  The absolute gene
+expression values will be changed, but the relative expression
+(whether it is higher or lower in a particular sample) will be
+preserved.
+
+```{r}
+X.norm <- t(scale(t(X.log.sub)))
+```
+
+And now, let's plot the normalized gene expression.  We'll limit the
+values to a range of -2 and +2 standard deviations so that the
+outliers do not skew the colors.
+
+```{r}
+rev <- X.norm[nrow(X.norm):1, I.sample]
+rev <- pmax(pmin(rev, 2), -2)
+heatmap(
+   rev, Rowv=NA, Colv=NA, scale="none", labRow="",
+  labCol="", col=brewer.pal(10,"RdBu"), zlim=c(-2, 2),
+  margins = c(1, 0))
+```
+
+This heatmap reveals a lot of variation in the gene expression, but
+it's hard to see the patterns here.  We can try to bring out the
+structure by doing some *clustering*.
+
+---
+
+# Clustering the data
+
+## Clustering reveals patterns in the data
+
+Here, we will do *hierarchical agglomerative clustering* (or just
+hierarchical clustering).  As we discussed before, there are a number
+of distance metrics, or ways to calculate the distance between two
+data points.  Some common ones that might be appropriate for gene
+expression data are:
+
++ pearson
++ euclidean
++ manhattan
++ minkowski
+
+You can get a description of them in R using:
+```{r}
+?dist
+```
+
+Also, for hierarchical clustering, there are different ways to
+combine branches into a tree:
+
++ average
++ complete
++ single
+
+See:
+```{r}
+?hclust
+```
+
+```{r}
+dist.method <- "pearson"
+clust.method <- "average"
+
+rev <- X.norm[nrow(X.norm):1, I.sample]
+if(dist.method == "pearson") {
+  row.dist <- as.dist(1-cor(t(rev), method=dist.method))
+  col.dist <- as.dist(1-cor(rev, method=dist.method))
+} else {
+  row.dist <- dist(rev, method=dist.method)
+  col.dist <- dist(t(rev), method=dist.method)
+}
+rc <- hclust(row.dist, method=clust.method)
+cc <- hclust(col.dist, method=clust.method)
+```
+
+Now, we will generate the clustered heatmaps.
+
+```{r}
+rev <- pmax(pmin(rev, 2), -2)
+heatmap(
+  rev, Rowv=as.dendrogram(rc), Colv=as.dendrogram(cc), scale="none",
+  labRow="", labCol="", col=brewer.pal(10,"RdBu"), zlim=c(-2, 2),
+  margins = c(1, 0))
+
+```
+
+
+
+## Clusters and the underlying biology
+
+From this heatmap, we can see that the tumors split up into different
+groups.  Is there any biological significance to these clusters?  Are
+these groups only seen in the gene expression patterns, or is it
+related to any known biology?
+
+As you previously learned, breast cancer is split up into ER+ and ER-
+tumors, depending on whether the tumor expresses high levels of
+receptors for estrogen.  This is really important to know because it
+tells you what's driving the disease, and also how to treat it.  To
+see whether ER status is associated with these clusters, let's label
+the samples with a `"+"` for ER+ breast cancers, and `"."` for negative.
+We'll leave blank the tumors that are missing this information
+[^check_order].
+
+[^check_order]: The first few lines of this code are just checks to
+    make sure the samples in the `brca_clinical_df` data frame,
+    containing the ER status, are in the same order as the gene
+    expression matrix.  If they aren't in the same order, the plot
+    will be incorrect.  Since this is critically important, you MUST
+    add code to check these things!
+
+```{r}
+clin <- brca_clinical_df[I.sample,]
+if(!all(clin[["bcr_patient_barcode"]] == colnames(rev))) stop("unaligned")
+if(!all(clin[["bcr_patient_barcode"]] == cc$labels)) stop("unaligned")
+
+x <- clin[["breast_carcinoma_estrogen_receptor_status"]]
+print(sort(unique(x)))
+er <- rep("", length(x))
+er[x == "Positive"] <- "+"
+er[x == "Negative"] <- "."
+print(sum(er == ""))
+
+heatmap(
+  rev, Rowv=as.dendrogram(rc), Colv=as.dendrogram(cc), scale="none",
+  labRow="", labCol=er, col=brewer.pal(10,"RdBu"),
+  zlim=c(-2, 2), margins = c(1, 0))
+
+```
+
+In this plot, I see about four clusters of samples (although we can
+debate about this).  Three of them have a lot of ER+ tumors (marked by
+the row of pluses on the bottom), while the fourth (on the very right)
+is nearly all ER-.  It's not a perfect split, however.  Let's
+calculate the p-value to determine the statistical significance.  I'm
+not going to go through the statistics in detail, but briefly, we will
+split these samples into 4 clusters.  Then, we will set up a 2-way
+contingency table and calculate the statistical significance with a
+chi-square test.
+
+```{r}
+NUM.CLUSTERS <- 4
+if(!all(clin[["bcr_patient_barcode"]] == cc$labels)) stop("unaligned")
+cluster <- cutree(cc, k=NUM.CLUSTERS)
+
+outcome <- "breast_carcinoma_estrogen_receptor_status"
+values <- sort(unique(clin[[outcome]]))
+uniq.clust <- sort(unique(cluster))
+counts <- matrix(0, nrow=length(values), ncol=length(uniq.clust))
+row.names(counts) <- values
+for(i in 1:length(values)) {
+  for(j in 1:length(uniq.clust)) {
+    I1 <- clin[[outcome]] == values[i]
+    I2 <- cluster == uniq.clust[j]
+    counts[i, j] <- sum(I1&I2)
+  }
+}
+print(counts)
+print(chisq.test(counts))
+```
+
+In fact, the association between ER status and cluster is
+statistically significant [^chisq_warning].
+
+[^chisq_warning]: You will get an alarming warning here that the 
+      *Chi-squared approximation may be incorrect*.  This is 
+      happening because some entries in the contingency table
+      are small, and thus difficult to model accurately.
+      We can ignore this warning for now.
+
+
+
+---
+
+# mini-DREAM Challenge
+
+**QUESTION:** How does the choice of distance metric or clustering
+method affect the association of ER status and the clusters?  What is
+the best set of parameters (distance metric, clustering method, and
+number of clusters) and p-value you can find?
+
+To answer this question, you can re-run the code under the section
+*Clustering reveals patterns in the data*.  You can try different
+values for `my_dist.method`, including `pearson`, `euclidean`, or
+`manhattan`.  For `my_clust.method`, you can try `average`, `complete`,
+or `single`.  Run the chunks and see what the clustered heatmap looks
+like.
+
+```{r}
+# Select and fill in the values you want to use for distance method and
+# clustering method (refer to the values above)
+my_dist.method <- ""
+my_clust.method <- ""
+
+# Don't worry about changing the code below! You can just adjust the two
+# values above and then re-run the chunk when you want to see the updated
+# heatmap and clustering results.
+rev <- X.norm[nrow(X.norm):1, I.sample]
+if(my_dist.method == "pearson") {
+  row.dist <- as.dist(1-cor(t(rev), method=my_dist.method))
+  col.dist <- as.dist(1-cor(rev, method=my_dist.method))
+} else {
+  row.dist <- dist(rev, method=my_dist.method)
+  col.dist <- dist(t(rev), method=my_dist.method)
+}
+rc <- hclust(row.dist, method=my_clust.method)
+cc <- hclust(col.dist, method=my_clust.method)
+
+rev <- pmax(pmin(rev, 2), -2)
+heatmap(
+  rev, Rowv=as.dendrogram(rc), Colv=as.dendrogram(cc), scale="none",
+  labRow="", labCol=er, col=brewer.pal(10,"RdBu"),
+  zlim=c(-2, 2), margins = c(1, 0))
+```
+
+Finally, here's a chunk that calculates the p-value using a
+chi-squared test.  In this chunk, you will need to change the
+`my_NUM.CLUSTERS` parameter based on the number of clusters you wish to
+break the samples into.  There's not a hard and fast rule for how to
+choose this.  You can just look at the data to see how many you think
+naturally falls out.
+
+```{r}
+# Select and fill in the value you want to use for number of clusters
+my_NUM.CLUSTERS <- 4 
+
+# Don't worry about changing the code below! You can just adjust the two
+# value above and then re-run the chunk when you want to see the updated
+# Chi-squared test results
+if(!all(clin[["bcr_patient_barcode"]] == cc$labels)) stop("unaligned")
+cluster <- cutree(cc, k=my_NUM.CLUSTERS)
+
+outcome <- "breast_carcinoma_estrogen_receptor_status"
+values <- sort(unique(clin[[outcome]]))
+uniq.clust <- sort(unique(cluster))
+counts <- matrix(0, nrow=length(values), ncol=length(uniq.clust))
+row.names(counts) <- values
+for(i in 1:length(values)) {
+  for(j in 1:length(uniq.clust)) {
+    I1 <- clin[[outcome]] == values[i]
+    I2 <- cluster == uniq.clust[j]
+    counts[i, j] <- sum(I1&I2)
+  }
+}
+print(counts)
+print(chisq.test(counts))
+```
+
+
+Please document your results below.
+
+```{r}
+
+my_distance_metric <- ""
+my_cluster_method <- ""
+my_num_clusters <- 0
+my_p_value <- 1
+
+```
+
+
+Submit your results to Synapse
+```{r}
+# Load function to submitting answers to the leader board
+scripts_dir <- "/home/shared/R"
+source(file.path(scripts_dir, "submission_helpers.R"))
+
+# Log into Synapse
+synLoginSecure()  # You might be prompted for your username and password
+
+# Submit answers
+submission <- submit_module_answers(module = 4)
+```
+
+---
+
+# The most important take-away
+
+The most important thing I would like you to take from this, is to
+**always look at your data**.  As a computational scientist, it is
+easy to become complacent and place an undue amount of faith in the
+power of the formulas that we've spent so much time developing.
+However, the methods are only as good as the underlying data, and
+biology has a limitless ability to surprise.  So, don't fail to spend
+time looking at your data.  What does the underlying distribution look
+like?  Are there unexpected patterns in it that are difficult to
+explain?  Unsupervised methods can help you to reveal confounding
+factors (very frequent), or discover new biology (sometimes).
+
+Have fun exploring your data!
+
+---
+
+# Bonus — Thought questions
+
+1.  A significant problem in science is *overfitting the data*.  This
+is a common phenomenon where a computational method may work really
+well on the data set that it was developed on, but then doesn't work
+as well (or at all) on other data sets.  This happens because
+computational methods will pick up on both signals that are
+reproducible biology as well as signals that are idiosyncrasies to a
+particular data set (e.g. confounding factors, technical variation).
+As a method that is calibrated on a specific data set (like we did
+here), it will become more finely tuned to pick up on features unique
+to this data set.  The magnitude of the problem depends on the
+relative intensity of the biological signal to the noise.  When
+developing computational methods, you should always be aware that
+overfitting is occurring.  What steps can you take to mitigate the
+problem, or at least measure how big of an issue it is?
+
+2.  In your exploration of different distance metrics or clustering
+methods, did you see the association with many different parameters,
+or just a specific one?  Is the result robust?
+
+3.  What is a p-value?  If a p-value cutoff of 5% means that there's a
+5% chance that you would see this association randomly, how many
+significant p-values would you expect to see if you did 100
+experiments on random data (e.g. tested 100 clinical covariates,
+tested 100 sets of parameters, etc.)?  About how many tests did you do
+to answer the mini-DREAM Challenge?  What does this mean in terms of
+the number of false positives you expect to see?
+
+4.  Why might an ER+ tumor be clustered with ER- tumors based on gene
+expression?
+
+5.  Are there other clinical covariates that associate with your
+clusters?  (To answer this question, you will need to do more
+computational analysis to test each covariate in the annotation
+files).  What are the p-values of their association?
+
+6.  If another clinical covariate is correlated with ER status, what
+does that mean biologically?  Which one causes the other?  Or could
+they both be the result of another process?  How would you distinguish
+these possibilities?
+
+---
+
+
+# Bonus - Activity
+
+## t-SNE: T-distributed Stochastic Neighbor Embedding
+
+Another method to look at the data is *t-SNE*.  This method has
+recently become popular because it works well with single-cell data.
+It is a way to organize high dimensional data (the tumor samples here
+are high dimensional because each gene is a dimension) into low
+dimensions (i.e., into a two-dimensional scatterplot) in a way that
+best preserves the distances seen in high dimension.  While we're not
+looking at single-cell data here, it works well on bulk expression
+data too.
+
+A t-SNE analysis has one (major) parameter that you must specify, the
+*perplexity*.  It determines the size of the neighborhood the algorithm
+uses when finding clusters.  The way to fit this parameter is just to
+try different methods and see what the clustering looks like.  Usually
+a good perplexity is within 2-50, and I've found that around 15-25
+usually works well for single-cell expression data.  You can try
+playing around with this to see how it affects the plot.
+
+Let's see how we can use t-SNE to cluster the data set above.  We'll
+use the entire data set here (rather than the 10% used above) since
+high numbers of tumor samples are easy to visualize in a scatterplot.
+We use Pearson correlations to find the distance between data points.
+
+This should run for a minute or two.
+
+```{r}
+library(tsne)
+
+PERPLEXITY <- 25
+D <- as.dist(1-cor(X.norm, method="pearson"))
+coords <- tsne(D, perplexity=PERPLEXITY, max_iter=200)
+plot(coords[,1], coords[,2], pch=19, cex=0.75, xlab="", ylab="", axes=FALSE)
+```
+
+
+Here, each point is a tumor sample that is clustered according to
+their gene expression profiles.  Let's see whether the t-SNE clusters
+here are associated with ER status.  We'll color [^r_color] each point
+according to the ER status.  ER+ will be red, and ER- will be blue.
+
+[^r_color]: Colors in R are represented as strings in the format
+    `#RRGGBB`, where RR is a two digit hexadecimal value from 00-FF
+    indicating the shade of red (00 is no red, and FF is the most).
+    Green and blue shades are indicated in the GG and BB characters.
+    As an example, `#D80713` is a red-ish color.  There is a heavy red
+    shade (D8), while green (07) and blue (13) are low.
+
+```{r}
+clin.tsne <- brca_clinical_df
+if(!all(clin.tsne[["bcr_patient_barcode"]] == colnames(X.norm))) stop("unaligned")
+
+x <- clin.tsne[["breast_carcinoma_estrogen_receptor_status"]]
+col <- rep("#A0A0A0", length(x))
+col[x == "Positive"] <- "#D80713"   # Red
+col[x == "Negative"] <- "#3979A8"   # Blue
+if(length(col) != nrow(coords)) stop("misaligned")
+
+plot(coords[,1], coords[,2], pch=19, cex=0.75, xlab="", ylab="",
+     axes=FALSE, col=col)
+```
+
+You can see that the ER positive (red) and negative (blue) tumors are
+separated relatively cleanly.  Thus, the ER status is a signal that is
+robust across at least two different methods of clustering.

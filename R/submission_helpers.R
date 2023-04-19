@@ -17,19 +17,33 @@ create_module0_submission <- function() {
   submission_filename
 }
 
+create_module1_submission <- function() {
+  submission_filename <- paste(Sys.getenv("USER"), "activity-1.yml", sep = "_")
+  
+  N_lobular_guess <<- N_lobular
+  N_tumor_free_guess <<- N_tumor_free
+  
+  answers <- list(
+    N_lobular = N_lobular_guess, 
+    N_tumor_free = N_tumor_free_guess 
+  )
+  write_yaml(answers, submission_filename)
+  submission_filename
+}
+
 create_module2_submission <- function() {
   submission_filename <- paste(Sys.getenv("USER"), "activity-2.yml", sep = "_")
   
-  gene <<- my_gene
-  delta <<- my_delta
-  description <<- my_description
-  rationale <<- my_rationale
+  gene_fast <<- my_gene_fast
+  gene_slow <<- my_gene_slow
+  reason_slow <<- my_reason_slow
+  reason_fast <<- my_reason_fast
   
   answers <- list(
-    gene = gene, 
-    delta = delta, 
-    description = description, 
-    rationale = rationale
+    gene_fast = gene_fast, 
+    gene_slow = gene_slow, 
+    reason_slow = reason_slow, 
+    reason_fast = reason_fast
   )
 
   write_yaml(answers, submission_filename)
@@ -39,21 +53,34 @@ create_module2_submission <- function() {
 create_module3_submission <- function() {
   submission_filename <- paste(Sys.getenv("USER"), "activity-3.yml", sep = "_")
   
-  distance_metric <<- my_distance_metric
-  cluster_method <<- my_cluster_method
-  num_clusters <<- my_num_clusters
-  p_value <<- my_p_value
+  determinant_n <<- my_determinant
+  dist_euclidean <<- my_dist_eucl
+  dist_canberra <<- my_dist_canb
+
+  if (exists("my_cluster1") && exists("my_cluster2") && exists("my_cluster3")){
+      cluster1<<- my_cluster1
+      cluster2<<- my_cluster2
+      cluster3<<- my_cluster3
+  } else {
+    cluster1 <- NULL
+    cluster2 <- NULL
+    cluster3 <- NULL
+
+  }
   
   answers <- list(
-    distance_metric = distance_metric, 
-    cluster_method = cluster_method, 
-    num_clusters = num_clusters, 
-    p_value = p_value
+    determinant_n = determinant_n, 
+    dist_euclidean = dist_euclidean, 
+    dist_canberra = dist_canberra, 
+    cluster1 = cluster1,
+    cluster2 = cluster2,
+    cluster3 = cluster3
   )
-  
+
   write_yaml(answers, submission_filename)
   submission_filename
 }
+
 
 # create_module3_old_submission <- function() {
 #   submission_filename <- paste(Sys.getenv("USER"), "activity-3-old.yml", sep = "_")
@@ -79,41 +106,38 @@ create_module3_submission <- function() {
 create_module4_submission <- function() {
   submission_filename <- paste(Sys.getenv("USER"), "activity-4.yml", sep = "_")
   
-  model_gene <<- my_model_gene
-  gene_relationship <<- my_gene_relationship
-  gene_significance <<- my_gene_significance
-  model_judgement <<- my_model_judgement
-  prediction <<- my_prediction
+  distance_metric <<- my_distance_metric
+  cluster_method <<- my_cluster_method
+  num_clusters <<- my_num_clusters
+  p_value <<- my_p_value
   
   answers <- list(
-    model_gene = model_gene, 
-    gene_relationship = gene_relationship,
-    gene_significance = gene_significance,
-    model_judgement = model_judgement,
-    prediction = prediction
+    distance_metric = distance_metric, 
+    cluster_method = cluster_method,
+    num_clusters = num_clusters,
+    p_value = p_value
   )
   
   write_yaml(answers, submission_filename)
   submission_filename
 }
 
+
 create_module5_submission <- function() {
   submission_filename <- paste(Sys.getenv("USER"), "activity-5.yml", sep = "_")
   
-  gene_count <<- my_gene_count
-  go_subontology <<- my_go_subontology
-  top_go_id <<- my_top_go_id
-  go_description <<- my_go_description
-  fav_go_term <<- my_fav_go_term
-  rationale <<- my_rationale
+  nc_bound_final <<- nc_bound_final
+  time_half <<- time_half
+  unbound_freq <<- unbound_freq
+  mforce_mean <<- mforce_mean
+
+
   
   answers <- list(
-    gene_count = gene_count, 
-    go_subontology = go_subontology,
-    top_go_id = top_go_id, 
-    go_description = go_description, 
-    fav_go_term = fav_go_term,
-    rationale = rationale
+    nc_bound_final = nc_bound_final,
+    time_half = time_half, 
+    unbound_freq = unbound_freq,
+    mforce_mean = mforce_mean
   )
   
   write_yaml(answers, submission_filename)
@@ -123,22 +147,17 @@ create_module5_submission <- function() {
 create_module6_submission <- function() {
   submission_filename <- paste(Sys.getenv("USER"), "activity-6.yml", sep = "_")
 
-  nc_bound_final_sub <<- nc_bound_final
-  time_half_sub <<- time_half
-  unbound_freq_sub <<- unbound_freq
-  mforce_mean_sub <<- mforce_mean
-  unbound_freq_deform_sub <<- unbound_freq_deform
-  mforce_mean_deform_sub <<- mforce_mean_deform
-  Equation_SubDeform_MForce_sub <<- Equation_SubDeform_MForce
+
+  unbound_freq_deform <<- unbound_freq_deform
+  mforce_mean_deform<<- mforce_mean_deform
+  optimal_stiffness <<- optimal_stiffness
+  traction_ratio <<- traction_ratio
   
   answers <- list(
-    nc_bound_final = nc_bound_final_sub,
-    time_half = time_half_sub,
-    unbound_freq = unbound_freq_sub,
-    mforce_mean = mforce_mean_sub,
-    unbound_freq_deform = unbound_freq_deform_sub,
-    mforce_mean_deform = mforce_mean_deform_sub,
-    Equation_SubDeform_MForce = Equation_SubDeform_MForce_sub
+    unbound_freq_deform = unbound_freq_deform,
+    mforce_mean_deform = mforce_mean_deform,
+    optimal_stiffness = optimal_stiffness,
+    traction_ratio = traction_ratio
   )
   
   write_yaml(answers, submission_filename)
@@ -187,14 +206,14 @@ submit_module_answers <- function(module, local = FALSE) {
   )
   submission_folder <- switch(
     module,
-    "0" = "syn25653272",
-    "1" = "syn25653301",
-    "2" = "syn25653326",
-    "3" = "syn25653327",
-    "4" = "syn25653347",
-    "5" = "syn25653365",
-    "6" = "syn25653383",
-    "7" = "syn25653405"
+    "0" = "syn29616351",
+    "1" = "syn29616391",
+    "2" = "syn29616395",
+    "3" = "syn29616416",
+    "4" = "syn29616438",
+    "5" = "syn29616450",
+    "6" = "syn29616513",
+    "7" = "syn29616560"
   )
   
   if (!local) {
@@ -202,7 +221,7 @@ submit_module_answers <- function(module, local = FALSE) {
     activity_submission <- synStore(
       File(path = submission_filename, parentId = submission_folder)
     )
-    submission <- synSubmit(evaluation = "9614774", 
+    submission <- synSubmit(evaluation = "9615035", 
                             entity = activity_submission)
     
     message("")

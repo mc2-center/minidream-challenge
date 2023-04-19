@@ -9,7 +9,7 @@ fi
 #----------------------------
 # Activate conda environment
 #----------------------------
-source /home/bgrande/miniconda3/bin/activate /home/bgrande/miniconda3/envs/minidream-2021
+source /home/lpeng/miniconda3/bin/activate /home/lpeng/miniconda3/envs/minidream-2022
 
 #----------------------------
 # Validate submissions
@@ -20,4 +20,4 @@ source /home/bgrande/miniconda3/bin/activate /home/bgrande/miniconda3/envs/minid
 #----------------------------
 # Score submissions
 #----------------------------
-python3 $script_dir/challenge.py -u "bgrande" -u "mnikolov" --send-messages --notifications score --all >> $script_dir/log/score.log 2>&1
+python3 $script_dir/challenge.py -u "bgrande" -u "mnikolov" -u "linglp0122" --send-messages --notifications score --all >> $script_dir/log/score.log 2>&1
