@@ -199,18 +199,24 @@ my_bday_guess <- "06/15"
 my_age_guess <- 42
 ```
 
-
 ## Submitting the prediction
 
-You're now ready to submit the prediction. Just run the chunk below, a file with your prediction will be uploaded to Synapse and submitted to the challenge. You'll be able to see the results of your prediction on the mini-DREAM scoreboards, with the submission ID that gets printed below.
+You're now ready to submit! Before you can do so, you must first log in with your Synapse credentials. For security purposes, we recommend using a Synapse Personal Access Token (PAT) rather than your username and password. This token can be generated on the Synapse platform [here](https://www.synapse.org/#!PersonalAccessTokens:).
 
-```{r}
+Click on the blue **Create New Token** button. You will be asked to provide a token name - we recommend using something descriptive such as "minidream". Under **Token Permissions**, give the token **View** and **Modify** permissions.  Upon generating, you will be given a token that is ONLY AVAILABLE FOR VIEWING ONCE. Copy the token, then paste it into `authToken` in the code chunk below.
+
+> Note: By using `rememberMe = TRUE` in the login below, you will not need to provide your credentials from this point forward.
+
+Once you copy over your PAT, go ahead and run the code chunk below.
+
+```{r eval=FALSE}
 library(synapser)
-synLogin('my_synapse_username', 'my_synapse_password',
-         rememberMe = TRUE, silent = TRUE)  # You might be prompted for your username and password
+synLogin(authToken = "replace-me",
+         rememberMe = TRUE,
+         silent = TRUE)
 submission <- submit_module_answers(module = 0)
 ```
 
-Congrats — you've reached the end of **Module 0**! You can now return to the **mini-DREAM** Challenge site on Synapse. **Make sure to save your work before you leave!**
+If successful, a file with your prediction will be uploaded to Synapse and submitted to the challenge. You'll be able to see the results of your prediction on the miniDREAM scoreboards, with the submission ID that gets printed below.
 
 ---
