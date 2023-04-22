@@ -11,8 +11,8 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-data_dir <- "../../data"
-scripts_dir <- "../../R"
+data_dir <- "/home/shared/data"
+scripts_dir <- "/home/shared/R"
 source(file.path(scripts_dir, "submission_helpers.R"))
 ```
 
