@@ -1,4 +1,4 @@
-name: minidream-2022
+name: minidream
 channels:
   - conda-forge
   - bioconda
@@ -19,6 +19,7 @@ dependencies:
   - certifi=2021.5.30
   - cffi=1.14.5
   - chardet=4.0.0
+  - click=8.1.3
   - cryptography=3.4.7
   - curl=7.77.0
   - dbus=1.13.6
@@ -226,6 +227,7 @@ dependencies:
   - sysroot_linux-64=2.12
   - tk=8.6.10
   - tktable=2.10
+  - typer=0.7.0
   - tzdata=2021a
   - tzlocal=2.1
   - urllib3=1.26.5

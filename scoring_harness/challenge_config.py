@@ -105,8 +105,8 @@ def score(submission):
 
 evaluation_queues = [
     {
-        'id':9615336,
-        'scoring_func':score,
+        'id': 9615336,
+        'scoring_func': score,
     }
 ]
 evaluation_queue_by_id = {q['id']:q for q in evaluation_queues}
