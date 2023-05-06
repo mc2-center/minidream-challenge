@@ -1,6 +1,8 @@
 library(yaml)
 library(jsonlite)
 library(getPass)
+
+reticulate::use_condaenv("base")
 library(synapser)
 
 create_module0_submission <- function() {
