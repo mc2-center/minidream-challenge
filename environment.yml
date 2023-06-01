@@ -249,4 +249,3 @@ dependencies:
   - zipp=3.4.1
   - zlib=1.2.11
   - zstd=1.5.0
-prefix: /home/lpeng/miniconda3/envs/minidream-2022
