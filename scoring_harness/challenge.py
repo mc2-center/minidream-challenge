@@ -226,6 +226,12 @@ def score(evaluation, can_cancel, dry_run=False):
             sys.stderr.write(st.getvalue())
             sys.stderr.write('\n')
             message = st.getvalue()
+            status.status = annots.annotate_submission(
+                syn,
+                submission.id,
+                {},
+                status="INVALID"
+            ).status
 
             if conf.ADMIN_USER_IDS:
                 submission_info = "submission id: %s\nsubmission name: %s\nsubmitted by user id: %s\n\n" % (submission.id, submission.name, submission.userId)
