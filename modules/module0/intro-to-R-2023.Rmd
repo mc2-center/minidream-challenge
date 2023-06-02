@@ -32,7 +32,7 @@ In this notebook, we will cover:
 * Updating your password
 * The RStudio IDE
 * Programming basics
-* Simple data isualization
+* Simple data visualization
 * mini-DREAM Challenge
 
 For today's activity, let's start by opening https://minidream.synapse.org/ in your browser and logging in using your Synapse username and the default password ("mini2023").  
