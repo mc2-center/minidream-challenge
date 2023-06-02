@@ -12,12 +12,10 @@ fi
 source /home/vchung/miniconda3/bin/activate /home/vchung/miniconda3/envs/minidream
 
 #----------------------------
-# Validate submissions
-#----------------------------
-# Remove --send-messages to do rescoring without sending emails to participants
-# python $script_dir/challenge.py -u "synapse user here" --send-messages --notifications validate --all >> $script_dir/log/score.log 2>&1
-
-#----------------------------
 # Score submissions
 #----------------------------
-python3 $script_dir/challenge.py -u "vchung" --send-messages --notifications score --all >> $script_dir/log/score.log 2>&1
+python3 $script_dir/challenge.py \
+  -u "mc2-center" \
+  --send-messages \
+  --notifications score \
+  --all >> $script_dir/log/score.log 2>&1
