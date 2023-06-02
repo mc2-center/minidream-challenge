@@ -336,7 +336,7 @@ my_age_guess <- 42
 
 You're now ready to submit! Before you submit for the first time, you must provide your Synapse Personal Access Token (PAT), which we use in place of username/password. Follow these steps to get a PAT:
 
-1. In your browser, navigate to https://www.synapse.org/#!PersonalAccessTokens: (include the colon at the end) 
+1. In your browser, navigate to https://www.synapse.org/#!PersonalAccessTokens:0
   
 2. Click on the blue **Create New Token** button. 
 
