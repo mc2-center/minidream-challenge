@@ -53,19 +53,19 @@ def get_args():
     # parser.add_argument("-p", "--password",
     #                     help="Password", default=None)
     parser.add_argument("--notifications",
-                        help="Send error notifications to challenge admins",
+                        help="Send errors to challenge admins",
                         action="store_true", default=False)
     parser.add_argument("--send-messages",
-                        help="Send validation and scoring messages to participants",
+                        help="Send results to participants",
                         action="store_true", default=False)
     parser.add_argument("--acknowledge-receipt",
-                        help="Send confirmation message on passing validation to participants",
+                        help="Send validation confirmation to participants",
                         action="store_true", default=False)
     parser.add_argument("--dry-run",
-                        help="Perform the requested command without updating anything in Synapse",
+                        help="Perform command without storing to Synapse",
                         action="store_true", default=False)
     parser.add_argument("--debug",
-                        help="Show verbose error output from Synapse API calls",
+                        help="Show verbose error output",
                         action="store_true", default=False)
 
     subparsers = parser.add_subparsers(title="subcommand")
@@ -83,7 +83,7 @@ def get_args():
 
     # Score sub-command
     parser_score = subparsers.add_parser("score",
-                                         help="Score RECEIVED submissions to an evaluation")
+                                         help="Score RECEIVED submissions")
     parser_score.add_argument("evaluation", metavar="EVALUATION-ID",
                               nargs="?", default=None)
     parser_score.add_argument("--all",
@@ -189,8 +189,8 @@ def score(evaluation, dry_run=False):
 
         try:
             score, message = conf.score_submission(evaluation, submission)
-
-            print("scored:", submission.id, submission.name, submission.userId, score)
+            print("scored:", submission.id, submission.name,
+                  submission.userId, score)
 
             ## fill in team in submission status annotations
             if "teamId" in submission:
@@ -218,7 +218,8 @@ def score(evaluation, dry_run=False):
             ).status
 
         except Exception:
-            sys.stderr.write(f"\n\nError scoring submission {submission.name} ({submission.id}):\n")
+            sys.stderr.write(f"\n\nError scoring submission {submission.name} "
+                             f"({submission.id}):\n")
             st = StringIO()
             traceback.print_exc(file=st)
             sys.stderr.write(st.getvalue())
@@ -232,10 +233,18 @@ def score(evaluation, dry_run=False):
             ).status
 
             if conf.ADMIN_USER_IDS:
-                submission_info = "submission id: %s\nsubmission name: %s\nsubmitted by user id: %s\n\n" % (submission.id, submission.name, submission.userId)
-                messages.error_notification(userIds=conf.ADMIN_USER_IDS, message=submission_info+st.getvalue(), queue_name=evaluation.name)
+                submission_info = (
+                    f"submission id: {submission.id}\n"
+                    f"submission name: {submission.name}\n"
+                    f"submitted by user id: {submission.userId}\n\n"
+                )
+                messages.error_notification(
+                    userIds=conf.ADMIN_USER_IDS,
+                    message=submission_info + st.getvalue(),
+                    queue_name=evaluation.name
+                )
 
-        ## send message AFTER storing status to ensure we don"t get repeat messages
+        ## send message AFTER storing status to ensure we don"t repeat messages
         profile = syn.getUserProfile(submission.userId)
 
         if status.status == "SCORED":
@@ -301,7 +310,10 @@ def main():
 
     ## Acquire lock, don"t run two scoring scripts at once
     try:
-        update_lock = lock.acquire_lock_or_fail("challenge", max_age=timedelta(hours=4))
+        update_lock = lock.acquire_lock_or_fail(
+            "challenge",
+            max_age=timedelta(hours=4)
+        )
     except lock.LockedException:
         print("Is the scoring script already running? Can't acquire lock.")
         # can"t acquire lock, so return error code 75 which is a
@@ -326,7 +338,7 @@ def main():
 
         args.func(args)
 
-    except Exception as ex1:
+    except Exception:
         sys.stderr.write("Error in evaluation script:\n")
         st = StringIO()
         traceback.print_exc(file=st)
