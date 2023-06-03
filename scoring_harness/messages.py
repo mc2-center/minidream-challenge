@@ -31,8 +31,8 @@ validation_failed_template = """\
 
 <p>Sorry, but we were unable to validate your submission to the {queue_name}.</p>
 
-<p>Please refer to the challenge instructions which can be found at \
-{challenge_instructions_url} and to the error message below:</p>
+<p>Please refer to the <a href="{challenge_instructions_url}">challenge instructions</a>\
+and to the error message below:</p>
 
 <p>submission name: <b>{submission_name}</b><br>
 submission ID: <b>{submission_id}</b></p>
@@ -41,7 +41,7 @@ submission ID: <b>{submission_id}</b></p>
 {message}
 </pre></blockquote>
 
-<p>If you have questions, please ask on the forums at {support_forum_url}.</p>
+<p>If you have any questions, please ask on the <a href="{support_forum_url}">forums</a>.</p>
 
 <p>Sincerely,<br>
 {scoring_script}</p>
@@ -56,8 +56,8 @@ validation_passed_template = """\
 <p>submission name: <b>{submission_name}</b><br>
 submission ID: <b>{submission_id}</b></p>
 
-<p>If you have questions, please ask on the forums at {support_forum_url} or refer to the challenge \
-instructions which can be found at {challenge_instructions_url}.</p>
+<p>If you have any questions, please ask on the <a href="{support_forum_url}">forums</a> \
+or refer to the <a href="{challenge_instructions_url}">challenge instructions</a>.</p>
 
 <p>Sincerely,<br>
 {scoring_script}</p>
@@ -73,7 +73,7 @@ scoring_succeeded_template = """\
 {message}
 </pre></blockquote>
 
-<p>If you have questions, please ask on the forums at {support_forum_url}.</p>
+<p>If you have any questions, please ask on the <a href="{support_forum_url}">forums</a>.</p>
 
 <p>Sincerely,<br>
 {scoring_script}</p>
@@ -85,8 +85,8 @@ scoring_error_template = """\
 
 <p>Sorry, but we were unable to process your submission to the {queue_name}.</p>
 
-<p>Please refer to the challenge instructions which can be found at \
-{challenge_instructions_url} and to the error message below:</p>
+<p>Please refer to the <a href="{challenge_instructions_url}">challenge instructions</a>\
+and to the error message below:</p>
 
 <p>submission name: <b>{submission_name}</b><br>
 submission ID: <b>{submission_id}</b></p>
@@ -95,7 +95,7 @@ submission ID: <b>{submission_id}</b></p>
 {message}
 </pre></blockquote>
 
-<p>If you have questions, please ask on the forums at {support_forum_url}.</p>
+<p>If you have any questions, please ask on the <a href="{support_forum_url}">forums</a>.</p>
 
 <p>Sincerely,<br>
 {scoring_script}</p>
