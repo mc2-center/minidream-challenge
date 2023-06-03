@@ -17,7 +17,6 @@
 
 import argparse
 from datetime import datetime, timedelta
-import os
 import sys
 import traceback
 import lock
@@ -27,12 +26,11 @@ from synapseclient.core.exceptions import *
 from synapseclient import Evaluation
 import challengeutils.annotations as annots
 
-#from itertools import izip
+
 try:
     from StringIO import StringIO
 except ImportError:
     from io import StringIO
-
 
 try:
     import challenge_config as conf
@@ -50,10 +48,10 @@ syn = None
 def get_args():
     """Set up CLI."""
     parser = argparse.ArgumentParser()
-    parser.add_argument("-u", "--user",
-                        help="UserName", default=None)
-    parser.add_argument("-p", "--password",
-                        help="Password", default=None)
+    # parser.add_argument("-u", "--user",
+    #                     help="UserName", default=None)
+    # parser.add_argument("-p", "--password",
+    #                     help="Password", default=None)
     parser.add_argument("--notifications",
                         help="Send error notifications to challenge admins",
                         action="store_true", default=False)
@@ -73,10 +71,10 @@ def get_args():
     subparsers = parser.add_subparsers(title="subcommand")
 
     # Validate sub-command
-    # parser_validate = subparsers.add_parser('validate',
+    # parser_validate = subparsers.add_parser("validate",
     #                                         help="Validate RECEIVED submissions to an evaluation")
     # parser_validate.add_argument("evaluation", metavar="EVALUATION-ID",
-    #                              nargs='?', default=None)
+    #                              nargs="?", default=None)
     # parser_validate.add_argument("--all",
     #                              action="store_true", default=False)
     # parser_validate.add_argument("--canCancel",
@@ -84,10 +82,10 @@ def get_args():
     # parser_validate.set_defaults(func=command_validate)
 
     # Score sub-command
-    parser_score = subparsers.add_parser('score',
+    parser_score = subparsers.add_parser("score",
                                          help="Score RECEIVED submissions to an evaluation")
     parser_score.add_argument("evaluation", metavar="EVALUATION-ID",
-                              nargs='?', default=None)
+                              nargs="?", default=None)
     parser_score.add_argument("--all",
                               action="store_true", default=False)
     parser_score.add_argument("--canCancel",
@@ -99,12 +97,12 @@ def get_args():
 def get_user_name(profile):
     """Return full name as saved on Synapse profile."""
     names = []
-    if 'firstName' in profile and profile['firstName'].strip():
-        names.append(profile['firstName'])
-    if 'lastName' in profile and profile['lastName'].strip():
-        names.append(profile['lastName'])
+    if "firstName" in profile and profile["firstName"].strip():
+        names.append(profile["firstName"])
+    if "lastName" in profile and profile["lastName"].strip():
+        names.append(profile["lastName"])
     if len(names)==0:
-        names.append(profile['userName'])
+        names.append(profile["userName"])
     return " ".join(names)
 
 
@@ -117,7 +115,7 @@ def get_user_name(profile):
 #     print("-" * 60)
 #     sys.stdout.flush()
 
-#     for submission, status in syn.getSubmissionBundles(evaluation, status='RECEIVED'):
+#     for submission, status in syn.getSubmissionBundles(evaluation, status="RECEIVED"):
 
 #         ## refetch the submission so that we get the file path
 #         ## to be later replaced by a "downloadFiles" flag on getSubmissionBundles
@@ -138,7 +136,7 @@ def get_user_name(profile):
 #         if not is_valid:
 #             failure_reason = {"FAILURE_REASON":validation_message}
 #         else:
-#             failure_reason = {"FAILURE_REASON":''}
+#             failure_reason = {"FAILURE_REASON":""}
 #         status.status = annots.annotate_submission(
 #                 syn,
 #                 submission.id,
@@ -148,7 +146,7 @@ def get_user_name(profile):
 
 #         if not dry_run:
 #             status = syn.store(status)
-#         ## send message AFTER storing status to ensure we don't get repeat messages
+#         ## send message AFTER storing status to ensure we don"t get repeat messages
 #         profile = syn.getUserProfile(submission.userId)
 #         if is_valid:
 #             messages.validation_passed(
@@ -173,7 +171,7 @@ def get_user_name(profile):
 #                 message=validation_message)
 
 
-def score(evaluation, can_cancel, dry_run=False):
+def score(evaluation, dry_run=False):
     """Score submission."""
     if not isinstance(evaluation, Evaluation):
         evaluation = syn.getEvaluation(evaluation)
@@ -182,7 +180,7 @@ def score(evaluation, can_cancel, dry_run=False):
     print("-" * 60)
     sys.stdout.flush()
 
-    for submission, status in syn.getSubmissionBundles(evaluation, status='RECEIVED'):
+    for submission, status in syn.getSubmissionBundles(evaluation, status="RECEIVED"):
         status.status = "INVALID"
 
         ## refetch the submission so that we get the file path
@@ -195,22 +193,22 @@ def score(evaluation, can_cancel, dry_run=False):
             print("scored:", submission.id, submission.name, submission.userId, score)
 
             ## fill in team in submission status annotations
-            if 'teamId' in submission:
-                team = syn.restGET('/team/{id}'.format(id=submission.teamId))
-                if 'name' in team:
-                    score['team'] = team['name']
+            if "teamId" in submission:
+                team = syn.restGET(f"/team/{submission.teamId}")
+                if "name" in team:
+                    score["team"] = team["name"]
                 else:
-                    score['team'] = submission.teamId
-            elif 'userId' in submission:
+                    score["team"] = submission.teamId
+            elif "userId" in submission:
                 profile = syn.getUserProfile(submission.userId)
-                score['team'] = get_user_name(profile)
+                score["team"] = get_user_name(profile)
             else:
-                score['team'] = '?'
-            score['comment'] = "\n".join([
+                score["team"] = "?"
+            score["comment"] = "\n".join([
                 f"{k}: {v}" 
                 for k, v 
                 in score.items() 
-                if k not in ['module', 'userName', 'team']
+                if k not in ["module", "userName", "team"]
             ])
             status.status = annots.annotate_submission(
                 syn,
@@ -219,12 +217,12 @@ def score(evaluation, can_cancel, dry_run=False):
                 status="SCORED" if not dry_run else None
             ).status
 
-        except Exception as ex1:
-            sys.stderr.write('\n\nError scoring submission %s %s:\n' % (submission.name, submission.id))
+        except Exception:
+            sys.stderr.write(f"\n\nError scoring submission {submission.name} ({submission.id}):\n")
             st = StringIO()
             traceback.print_exc(file=st)
             sys.stderr.write(st.getvalue())
-            sys.stderr.write('\n')
+            sys.stderr.write("\n")
             message = st.getvalue()
             status.status = annots.annotate_submission(
                 syn,
@@ -237,10 +235,10 @@ def score(evaluation, can_cancel, dry_run=False):
                 submission_info = "submission id: %s\nsubmission name: %s\nsubmitted by user id: %s\n\n" % (submission.id, submission.name, submission.userId)
                 messages.error_notification(userIds=conf.ADMIN_USER_IDS, message=submission_info+st.getvalue(), queue_name=evaluation.name)
 
-        ## send message AFTER storing status to ensure we don't get repeat messages
+        ## send message AFTER storing status to ensure we don"t get repeat messages
         profile = syn.getUserProfile(submission.userId)
 
-        if status.status == 'SCORED':
+        if status.status == "SCORED":
             messages.scoring_succeeded(
                 userIds=[submission.userId],
                 message=message,
@@ -256,8 +254,7 @@ def score(evaluation, can_cancel, dry_run=False):
                 queue_name=evaluation.name,
                 submission_name=submission.name,
                 submission_id=submission.id)
-
-    sys.stdout.write('\n')
+    sys.stdout.write("\n")
 
 
 ## ==================================================
@@ -267,7 +264,7 @@ def score(evaluation, can_cancel, dry_run=False):
 #     """Validate sub-command."""
 #     if args.all:
 #         for queue_info in conf.evaluation_queues:
-#             validate(queue_info['id'], args.canCancel, dry_run=args.dry_run)
+#             validate(queue_info["id"], args.canCancel, dry_run=args.dry_run)
 #     elif args.evaluation:
 #         validate(args.evaluation, args.canCancel, dry_run=args.dry_run)
 #     else:
@@ -280,9 +277,9 @@ def command_score(args):
     """Score sub-command."""
     if args.all:
         for queue_info in conf.evaluation_queues:
-            score(queue_info['id'], args.canCancel, dry_run=args.dry_run)
+            score(queue_info["id"], dry_run=args.dry_run)
     elif args.evaluation:
-        score(args.evaluation, args.canCancel, dry_run=args.dry_run)
+        score(args.evaluation, dry_run=args.dry_run)
     else:
         sys.stderr.write("\nScore command requires either an evaluation ID"
                          " or --all to score all queues in the challenge")
@@ -294,28 +291,29 @@ def command_score(args):
 def main():
     """Main function."""
     if conf.CHALLENGE_SYN_ID == "":
-        sys.stderr.write("Please configure your challenge. See sample_challenge.py for an example.")
+        sys.stderr.write("Please configure your challenge. See "
+                         "sample_challenge.py for an example.")
     global syn
 
     args = get_args()
     print("\n" * 2, "=" * 75)
     print(datetime.utcnow().isoformat())
 
-    ## Acquire lock, don't run two scoring scripts at once
+    ## Acquire lock, don"t run two scoring scripts at once
     try:
-        update_lock = lock.acquire_lock_or_fail('challenge', max_age=timedelta(hours=4))
+        update_lock = lock.acquire_lock_or_fail("challenge", max_age=timedelta(hours=4))
     except lock.LockedException:
         print("Is the scoring script already running? Can't acquire lock.")
-        # can't acquire lock, so return error code 75 which is a
+        # can"t acquire lock, so return error code 75 which is a
         # temporary error according to /usr/include/sysexits.h
         return 75
 
     try:
         syn = synapseclient.Synapse(debug=args.debug)
-        if not args.user:
-            args.user = os.environ.get('SYNAPSE_USER', None)
-        if not args.password:
-            args.password = os.environ.get('SYNAPSE_PASSWORD', None)
+        # if not args.user:
+        #     args.user = os.environ.get("SYNAPSE_USER", None)
+        # if not args.password:
+        #     args.password = os.environ.get("SYNAPSE_PASSWORD", None)
         # syn.login(email=args.user, password=args.password)
         syn.login(silent=True)
 
@@ -329,14 +327,18 @@ def main():
         args.func(args)
 
     except Exception as ex1:
-        sys.stderr.write('Error in evaluation script:\n')
+        sys.stderr.write("Error in evaluation script:\n")
         st = StringIO()
         traceback.print_exc(file=st)
         sys.stderr.write(st.getvalue())
-        sys.stderr.write('\n')
+        sys.stderr.write("\n")
 
         if conf.ADMIN_USER_IDS:
-            messages.error_notification(userIds=conf.ADMIN_USER_IDS, message=st.getvalue(), queue_name=conf.CHALLENGE_NAME)
+            messages.error_notification(
+                userIds=conf.ADMIN_USER_IDS, 
+                message=st.getvalue(), 
+                queue_name=conf.CHALLENGE_NAME
+            )
 
     finally:
         update_lock.release()
@@ -345,5 +347,5 @@ def main():
     print("=" * 75, "\n" * 2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

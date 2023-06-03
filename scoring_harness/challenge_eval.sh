@@ -15,7 +15,6 @@ source /home/vchung/miniconda3/bin/activate /home/vchung/miniconda3/envs/minidre
 # Score submissions
 #----------------------------
 python3 $script_dir/challenge.py \
-  -u "mc2-center" \
   --send-messages \
   --notifications score \
   --all >> $script_dir/log/score.log 2>&1
