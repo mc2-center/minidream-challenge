@@ -22,12 +22,14 @@ create_module0_submission <- function() {
 create_module1_submission <- function() {
   submission_filename <- paste(Sys.getenv("USER"), "activity-1.yml", sep = "_")
   
-  N_lobular_guess <<- N_lobular
-  N_tumor_free_guess <<- N_tumor_free
+  N_stage2_guess <<- N_stage2
+  N_tumor_guess <<- N_tumor
+  N_tumor_II_guess <<- N_tumor_II 
   
   answers <- list(
-    N_lobular = N_lobular_guess, 
-    N_tumor_free = N_tumor_free_guess 
+    N_stage2 = N_stage2_guess, 
+    N_tumor = N_tumor_guess,
+    N_tumor_II = N_tumor_II_guess
   )
   write_yaml(answers, submission_filename)
   submission_filename
@@ -203,17 +205,16 @@ synLoginSecure <- function() {
     synLogin(silent = TRUE)
     message("Logging into Synapse using remembered credentials...")
   }, error = function(e) {
-    username <- getPass("Your Synapse Username")
-    password <- getPass("Your Synapse Password")
+    pat <- getPass("Your Synapse PAT")
     tryCatch({
-      synLogin(username, password, rememberMe = TRUE, silent = TRUE)
+      synLogin(authToken = pat, rememberMe = TRUE, silent = TRUE)
       message("Remembering Synapse credentials for future logins...")
     }, error = function(e) {
       if (grepl("You are not logged in", e)) {
         message(paste(
-          "You might have made a typo in your username or password.",
-          "Try logging in again by re-running synLoginSecure(). Note that",
-          "your Synapse account is separate from your RStudio account."
+          "Something went wrong while trying to log in with your PAT. Try ",
+          "logging in again by re-running synLoginSecure(). If the error ",
+          "persists, try generating a new token."
         ))
       } else {
         print(paste(e))
