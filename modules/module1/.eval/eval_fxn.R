@@ -6,11 +6,11 @@ library(yaml)
 check_answer <- function(pred, key) {
   diff <- as.integer(pred) - as.integer(key)
   if (diff < 0) {
-    return "Your guess was too small."
+    return("Your guess was too small.")
   } else if (diff > 0) {
-    return "Your guess was too big."
+    return("Your guess was too big.")
   } else {
-    return "Nailed it!"
+    return("Nailed it!")
   }
 }
 
