@@ -1633,8 +1633,8 @@ chunk</em> to run the code</strong></p>
 the TCGA data resides. This is good programming practice: We can examine
 data in a different location by changing the directory once at the
 beginning of our code.</p>
-<pre class="r"><code># The data we are using is located in /home/data on our cloud server.
-data_dir &lt;- &quot;c:/Users/dm527/Documents&quot;     
+<pre class="r"><code># The data we are using is located in /home/shared/data on our cloud server.
+data_dir &lt;- &quot;/home/shared/data&quot;     
 
 # Look in your Environment tab!</code></pre>
 <hr />
@@ -2153,6 +2153,21 @@ criteria.</p>
 stage II.</p>
 <p>Stage II breast cancer is usually treated by surgical removal
 followed by radiation.</p>
+</div>
+<div id="submit-your-work" class="section level2">
+<h2>Submit your work</h2>
+<p>You're almost done! Before you leave, submit your answers to the leaderboard.</p>
+<pre class="r"><code># Load function to submitting answers to the leaderboard.
+scripts_dir &lt;- "/home/shared/R"
+source(file.path(scripts_dir, &quot;submission_helpers.R&quot;))
+
+# Log into Synapse
+synLoginSecure()
+
+# Submit answers
+submission &lt;-- submit_module_answers(module = 1)</code></pre>
+<p>You can now return to the <strong>mini-DREAM</strong> challenge site to check on the submission status.
+<strong>Make sure to save your work before you leave!</strong></p>
 </div>
 <div id="wrapping-up" class="section level2">
 <h2>Wrapping up</h2>

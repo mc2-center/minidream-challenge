@@ -46,8 +46,8 @@ We will create an object that holds the name of the directory where the TCGA dat
 
 
 ```{r}
-# The data we are using is located in /home/data on our cloud server.
-data_dir <- "/home/data"     
+# The data we are using is located in /home/shared/data on our cloud server.
+data_dir <- "/home/shared/data"     
 
 # Look in your Environment tab!
 ```
@@ -605,6 +605,24 @@ Finally, assign your result.
 You will have found that about half of the tumors in this cohort are stage II.  
 
 Stage II breast cancer is usually treated by surgical removal followed by radiation. 
+
+## Submit your work
+
+You're almost done!  Before you leave, submit your answers to the leaderboard.
+
+```{r}
+# Load function to submitting answers to the leaderboard.
+scripts_dir <- "/home/shared/R"
+source(file.path(scripts_dir, "submission_helpers.R"))
+
+# Log into Synapse
+synLoginSecure()
+
+# Submit answers
+submission <- submit_module_answers(module = 1)
+```
+
+You can now return to the **mini-DREAM** challenge site to check on the submission status. **Make sure to save your work before you leave!**
 
 ## Wrapping up
 
