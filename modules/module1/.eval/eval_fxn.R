@@ -19,7 +19,7 @@ score_submission <- function(submission_filename) {
   
   N_stage2_msg <- check_answer(answers$N_stage2, key=615)
   N_tumor_msg <- check_answer(answers$N_tumor, key=123)
-  N_tumor_II_msg <- check_answer(answers$N_stage_II, key=64)
+  N_tumor_II_msg <- check_answer(answers$N_tumor_II, key=64)
   
   answers["N_stage2_comment"] <- N_stage2_msg
   answers["N_tumor_comment"] <- N_tumor_msg
