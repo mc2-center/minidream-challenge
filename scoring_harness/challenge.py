@@ -141,7 +141,8 @@ def get_user_name(profile):
 #                 syn,
 #                 submission.id,
 #                 failure_reason or {},
-#                 status=status.status if not dry_run else None
+#                 status=status.status if not dry_run else None,
+#                 is_private=False
 #             ).status
 
 #         if not dry_run:
@@ -214,7 +215,8 @@ def score(evaluation, dry_run=False):
                 syn,
                 submission.id,
                 score,
-                status="SCORED" if not dry_run else None
+                status="SCORED" if not dry_run else None,
+                is_private=False
             ).status
 
         except Exception:
@@ -229,7 +231,8 @@ def score(evaluation, dry_run=False):
                 syn,
                 submission.id,
                 {},
-                status="INVALID"
+                status="INVALID",
+                is_private=False
             ).status
 
             if conf.ADMIN_USER_IDS:
