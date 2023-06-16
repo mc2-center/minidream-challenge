@@ -38,16 +38,14 @@ create_module1_submission <- function() {
 create_module2_submission <- function() {
   submission_filename <- paste(Sys.getenv("USER"), "activity-2.yml", sep = "_")
   
-  gene_fast <<- my_gene_fast
-  gene_slow <<- my_gene_slow
-  reason_slow <<- my_reason_slow
-  reason_fast <<- my_reason_fast
+  esr1_guess <<- esr1
+  erbb2_guess <<- erbb2
+  skew_guess <<- skew
   
   answers <- list(
-    gene_fast = gene_fast, 
-    gene_slow = gene_slow, 
-    reason_slow = reason_slow, 
-    reason_fast = reason_fast
+    esr1 = esr1_guess, 
+    erbb2 = erbb2_guess, 
+    skew = skew_guess, 
   )
   write_yaml(answers, submission_filename)
   submission_filename
