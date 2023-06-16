@@ -475,7 +475,7 @@ Click the "Knit" button at the top of this window and select "Knit to html."
 
 ### Submit your work
 
-```{r}
+```{r, eval=FALSE}
 # Load function to submitting answers to the leaderboard.
 scripts_dir <- "/home/shared/R"
 source(file.path(scripts_dir, "submission_helpers.R"))
