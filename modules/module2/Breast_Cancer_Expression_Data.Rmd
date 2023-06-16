@@ -229,7 +229,7 @@ hist(mean.expr,
 
 ```
 
-Wow!  Most of the average expression values are relatively small but it's to tell because of a few VERY large values.
+Wow!  Most of the average expression values are relatively small but it's hard to tell because of a few VERY large values.
 
 How many values in mean.expr are greater than 10,000? 
 
