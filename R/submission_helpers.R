@@ -45,7 +45,7 @@ create_module2_submission <- function() {
   answers <- list(
     esr1 = esr1_guess, 
     erbb2 = erbb2_guess, 
-    skew = skew_guess, 
+    skew = skew_guess
   )
   write_yaml(answers, submission_filename)
   submission_filename
