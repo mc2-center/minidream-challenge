@@ -43,8 +43,8 @@ create_module2_submission <- function() {
   skew_guess <<- skew
   
   answers <- list(
-    esr1 = esr1_guess, 
-    erbb2 = erbb2_guess, 
+    esr1 = format(esr1_guess, scientific=FALSE), 
+    erbb2 = format(erbb2_guess, scientific=FALSE), 
     skew = skew_guess
   )
   write_yaml(answers, submission_filename)
