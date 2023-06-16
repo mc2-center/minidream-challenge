@@ -4,10 +4,10 @@ library(yaml)
 # library(glue)
 
 check_answer <- function(pred, key) {
-  diff <- round(pred) - round(key)
-  if (diff < 1) {
+  diff <- pred - key
+  if (diff < -0.5) {
     return("Your mean expression level is too low.")
-  } else if (diff > 1) {
+  } else if (diff > 0.5) {
     return("Your mean expression level is too high.")
   } else {
     return("Nailed it!")
