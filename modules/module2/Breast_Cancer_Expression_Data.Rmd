@@ -151,6 +151,67 @@ identical(colnames(brca_expr_mat),brca_clin_df[,1])
 
 ---
 
+### Expression and Pathologic Stage
+
+
+What information is available on pathological stage?
+
+
+```{r}
+# `table()` provides a summary
+table(brca_clin_df$pathologic_stage)
+
+```
+
+
+
+We will create array of TRUE and FALSE labels to define patients with stage I and III.
+
+
+```{r}
+# Boolean arrays
+stage_1<-brca_clin_df$pathologic_stage=="I"
+stage_3<-brca_clin_df$pathologic_stage=="III"
+
+```
+
+
+Once we define a gene, we can extract its expression in stage 1 and stage II patient samples.
+
+
+```{r}
+# define your gene of interest
+gene<-"KIF2C"
+
+# Use the boolean arrays to get expression levels of the gene in each stage
+x1 <-brca_expr_mat[gene,stage_1]
+x3 <-brca_expr_mat[gene,stage_3]
+
+```
+
+
+Let's use boxplots to visualize the expression of KIF2C in stage 1 versus stage 3.
+
+```{r}
+# `par` is for graphing parameters
+par(mfrow=c(1,2))
+
+# Define the range of the y-axis
+ymax<-4*median(brca_expr_mat[gene,])
+
+# `boxplot()` is a simple way to view distribution
+boxplot(x1, xlab="Stage 1",ylab=gene, ylim=c(0,ymax))
+boxplot(x3, xlab="Stage 3",ylab=gene, ylim=c(0,ymax))
+
+
+```
+
+
+KIF2C expression is higher, on average, in the TCGA patients with later stage cancer. KIF2C encodes a kinesin-like protein that functions as a microtubule-dependent molecular motor (we'll learn more about this with Jay!) and plays a role in cytoskeleton organization and chromosome segregation. KIF2C is a component of the PAM50 gene set which is often used for gene expression-based subtyping of breast cancer (https://bmcmedgenomics.biomedcentral.com/articles/10.1186/s12920-015-0129-6).  
+
+
+---
+
 ### Average expression
 
 
