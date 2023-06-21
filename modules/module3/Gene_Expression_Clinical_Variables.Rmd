@@ -548,7 +548,7 @@ source(file.path(scripts_dir, "submission_helpers.R"))
 synLoginSecure()
 
 # Submit answers
-submission <- submit_module_answers(module = 2)
+submission <- submit_module_answers(module = 3)
 ```
 
 
