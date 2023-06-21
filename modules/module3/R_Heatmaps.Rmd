@@ -1,0 +1,198 @@
+---
+title: 'DREAM-High: Introduction to Heatmaps'
+author: "Diana Murray"
+date: "6/20/2023"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: "spacelab"
+    code_folding: "show"
+---
+
+## Heatmaps
+
+Heatmaps are a way to colorize, visualize, and organize a data set.
+
+
+### mtcars
+
+R provides many data sets to work with, so we can learn new analysis skills before scaling up.  `mtcars` is a classic go-to R data frame. It was extracted from the 1974 Motor Trend US magazine and comprises fuel consumption and 10 design and performance features for 32 automobiles (1973--74 models).  
+
+
+```{r}
+head(mtcars)
+```
+
+
+The function `heatmap()` is an easy way to convert the values in mtcars to colors which helps us understand the data and find relationships. 
+
+Check out the help page for `heatmap()`.
+
+```{r,eval=FALSE}
+# The second argument tells R which `heatmap()` function we want.
+help(heatmap)
+```
+
+
+
+
+In the help file, we learn that `heatmap()` plots a **numeric matrix** of values.
+So our first step will be to ensure that the data are converted from a data frame to a matrix. 
+
+
+```{r}
+data <- as.matrix(mtcars)        # We ensure the data set is a matrix of numbers
+```
+
+
+
+
+### Base R heatmap
+
+
+Let's build a simple heatmap with no rearranging of rows and columns.  As you can see from the help file, `Rowv=NA` and `Colv=NA` suppresses ordering of the features and observations based on similarity.
+
+
+```{r}
+# A heat map is a false color image optionally with dendrograms
+# NA for Rowv and Colv suppresses calculation of dendrograms
+# cexRow scales font so we can see all car names
+heatmap(data, Rowv=NA, Colv=NA,cexRow=0.8)  
+
+```
+
+
+
+The rows correspond to cars (observations) and the columns to the 10 performance features. 
+In the default coloring scheme, the highest values have the darkest colors.  
+
+
+
+### Scaling
+
+
+Before we delve into the heatmap, we note that the display, as is, isn't very helpful in discerning relationships since the values of some of the features (columns) are very different. 
+
+For example, `wt` (all light-colored cells) and `disp` (all dark-colored cells) are on different scales, and it's hard to compare them in our color map. 
+
+
+In data analysis, normalizing or scaling is a technique for comparing data that isn’t measured in the same way. One way to do this is to use the mean value and standard deviation.
+
+For example, for `wt`, we would subtract the mean of `wt` from each value and then divide each by the standard deviation of `wt`. The **standard deviation** is a measure of how spread out the numbers are.
+
+
+Let's first compare `wt` and `disp`:
+
+```{r}
+# create arrays
+wt<-data[,"wt"]
+disp<-data[,"disp"]
+
+# calculate the range, i.e. the min and max values
+range(wt)
+range(disp)
+
+
+```
+
+
+Now, let's scale `wt` and `disp` and compare the scaled arrays.
+
+```{r}
+# use the `scale()` function to normalize the data
+wt_scaled<-scale(wt)
+disp_scaled<-scale(disp)
+
+# calculate the range, i.e. the min and max values
+range(wt_scaled)
+range(disp_scaled)
+
+```
+
+
+Nice! The values scaled in this way are called z-scores. The **z-score** tells you how many standard deviations from the mean your score is. 
+
+* A value equal to the mean will have a z-score of 0. 
+* A value two standard deviations above the mean will have a z-score of 2.
+
+The important point is that each feature is scaled according to its own distribution.  
+
+
+```{r}
+heatmap(data, Rowv=NA, Colv=NA, scale = "column", cexRow=0.8)
+```
+
+
+Now we can see if a car has both high `wt` and `disp`, e.g. the Chrysler Imperial. 
+
+But it's tedious to find these relationship by eye...
+
+
+
+### Dendrograms
+
+
+A dendrogram is a tree diagram that shows the hierarchical relationships among objects. It is most commonly created as an output from hierarchical clustering and shows how objects are allocated to different clusters. 
+
+The **dendrogram** is a summary of the distance matrix that gives the pairwise distances between among all points.
+
+There are many ways to calculate the distance between two points, for example, via roads or "as the crow flies."  By default, `heatmap()` uses the **Euclidean distance** or the length of a line between two points. For more on Euclidean distance, see the Extra work below.
+
+
+```{r}
+# by default, heatmap will calculate the dendrograms and reorder
+heatmap(data, scale = "column", cexRow=0.6)
+
+```
+
+
+
+This is quite nice.  Each row can be considered as a *profile of features*. Colorized and ordered this way, we can spot relationships among the profiles more easily.  
+
+Many of the groups are obvious and some are fun, for example, close similarity between the Duster 360 and Camaro Z28.
+
+We can also find features that are similar and perhaps redundant, e.g. `disp` and `hp`. 
+
+
+---
+
+
+## Extra: Euclidean distance
+
+The Euclidean distance formula is derived from the Pythagorean theorem: For a right triangle, the length of the hypotenuse is equal to the sum of the squares of the other two sides.
+
+We can create a function to calculate Euclidean distance:
+
+
+```{r}
+# we are assignaing a function to its name
+euclidean <- function(a, b) sqrt(sum((a - b)^2))
+
+```
+
+
+Let's consider a few vehicles:
+
+```{r}
+# Assign feature profiles to variables
+porsche<-data["Porsche 914-2",]
+volvo<-data["Volvo 142E",]
+bora<-data["Maserati Bora",]
+```
+
+
+And calculate the distance between them.  Which are the most similar?
+
+```{r}
+# `euclidean()` is the function we defined
+euclidean(porsche,volvo)
+euclidean(porsche,bora)
+euclidean(volvo,bora)
+```
+
+The Maserati Bora must be quite a special car, in a class by itself! And, referring back to the heatmap above, indeed it is.
+
+
+
+

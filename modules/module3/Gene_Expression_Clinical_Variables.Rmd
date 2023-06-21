@@ -1,0 +1,562 @@
+---
+title: "TCGA heatmaps and clustering"
+author: "Diana Murray"
+date: "6/21/2023"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: "spacelab"
+    
+---
+
+## About this activity
+
+In the earlier module **Breast_Cancer_Expression_Data**, we examined the mRNA levels for 18,351 genes across 1,082 breast cancer patients. 
+
+We saw that the average expression of the genes (across patient samples) varied greatly. By taking the **log of the expression values**, we compressed the data (or reduced the range of variation) so the genes were more comparable.  
+
+Each column in the log-transformed expression matrix corresponds to a different patient, and each patient has their own set of gene expression values. 
+
+Each row in the log-transformed expression matrix corresponds to a different gene, and each gene has its own set of expression values across patients.
+
+In another activity **R_Heatmaps**, we worked with the smaller iconic data set `mtcar` and saw how the function `heatmap()` can reorder objects in our data set to reveal patterns in the data: Objects and features in the same **clusters** are more similar to each other than to those in other clusters. 
+
+The reordering of data by heatmap clustering provides insight into why objects may be related.  
+
+We will apply these concepts and skills to the TCGA clinical and gene expression features.
+
+
+---
+
+
+## Loading the data
+
+Last time, we learned why it's important to log transform gene expression values.  You can review the procedure in **Breast_Cancer_Expression_Data.Rmd**. 
+
+We will begin this activity where we left off last time: with the matrix of log-transformed data.
+
+
+### The data directory
+
+
+We will create an object that holds the name of the directory where the TCGA data resides. This is good R coding practice because we can apply all we do below to a data set in a different directory by changing a single variable (`data_dir`).
+
+
+```{r include=FALSE}
+# Where the data resides
+data_dir <- "/home/shared/data" 
+
+```
+
+
+
+We will use both the clinical and gene expression data.
+
+```{r}
+# We `load()` the file "TCGA_brca_log.RData".
+# The file.path() function tells `load()` where our data resides
+# The objects will also appear in our "Environment" tab.
+load(file.path(data_dir, "TCGA_brca_log.RData"),verbose=TRUE)
+
+```
+
+
+Objects were named to be be descriptive.
+
+* "brca" stands for "TCGA breast cancer"
+* "clin" is short for "clinical"
+* "df" is short for "data frame," a table of data
+* "expr" stands for "gene expression data"
+* "mat" means the expression data is in matrix form
+* "log" reminds us that the data was log-transformed 
+
+---
+
+
+## Viewing the data
+
+The **Environment** tab gives us basic information on the object that was loaded.
+
+We will use some of the R functions we learned previously to examine the data in more detail.
+
+* `dim()` tells us the dimensions (# row, # columns) of the objects.
+* `head()` shows us the top several rows of the objects.
+* *indexing* allows us to look at the rows and columns we choose.
+
+
+```{r}
+# the function `dim()` returns the number of rows and columns in our matrix
+dim_mat <- dim(brca_expr_mat.log)  
+                                        
+# Let's add a little more code to display our results in an informative way
+print(paste("The log-transformed gene expression matrix has",dim_mat[1],
+              "rows and",dim_mat[2],"columns."))
+
+```
+
+
+Let's see what's in the rows and columns.
+
+```{r}
+# This is an example of indexing
+brca_expr_mat.log[1:5,1:5] 
+
+```
+
+Rows are named with the genes whose expression values were measured. 
+Columns are named with the patient bar code identifier.
+
+"TSPAN6" is the name of the gene that codes for the protein Tetraspanin-6.
+"TCGA-3C-AAAU" is the anonymized identifier for one patient's sample.
+
+---
+
+
+## Heatmaps
+
+A **heatmap** is a graphical representation of data that uses a system of color-coding to represent different ranges of values. Heat maps make it easy to visualize complex data and understand it at a glance. 
+
+
+---
+
+### Most variable genes
+
+
+To reduce the number of genes to consider, we will select the "most important" ones for our exploratory analysis. 
+
+One common approach is to find the genes with the biggest differences or **highest variance** across patient samples.
+
+
+We'll order our matrix accordingly and create a sub-matrix for the top 500 variable genes.
+This is a large code chunk, but we're getting good at this!
+
+
+```{r}
+# We choose 500 genes, but you can change this value!
+num_genes <- 500                        
+
+#  `apply()` is used to get the variance of each row 
+# The argument "1" applies `var()` to the rows
+var_genes <- apply(brca_expr_mat.log, 1, var)   
+                                        
+# `order()` ranks the values 
+# The argument decreasing=TRUE orders from large to small values
+order_var <- order(var_genes, decreasing=TRUE)   
+                
+
+# This line of code does multiple operations
+# We create a matrix that consists of the 500 genes (rows) with the highest variance 
+brca.log.sub <- brca_expr_mat.log[order_var[1:num_genes],]
+
+```
+
+
+Let's take a look at the new matrix:
+
+```{r}
+# Indexing
+brca.log.sub[1:5,1:10]
+
+```
+
+
+Let's examine this a bit further...
+
+---
+
+
+### Boxplots
+
+Boxplots provide a summary view of the range of expression values for different genes.  
+
+We'll check the first 25 genes from our original matrix and then from our re-ordered matrix.
+
+**Task**  Use help() to see what the arguments to `boxplot()` mean in the next two code chunks.
+
+```{r}
+ngenes <- 25
+
+# the arguments to `boxplot()` in the second line are plotting parameters
+boxplot(t(brca_expr_mat.log[1:ngenes,]), ylab="Log_2 Expression",
+        cex.names=0.2, las=2, pch=20, cex=0.6)
+
+```
+
+
+In a boxplot, the gray box shows the range of most (50%) of the data. **Outliers**, the genes with extreme values are depicted as dots. Note the scale on the vertical axis (from 0 to 15).
+
+Now, let's look at boxplots for 25 **most variable** genes:
+
+```{r}
+ngenes <- 25
+
+# the arguments to `boxplot()` in the second line are plotting parameters
+boxplot(t(brca.log.sub[1:ngenes,]), ylab="Log_2 Expression",
+        cex.names=0.2, las=2, pch=20, cex=0.6)
+
+```
+
+The range of the values is **much greater**!  
+
+To see this more clearly, we'll plot both side-by-side on the same scale.
+
+```{r}
+# the function par() allows us to control how plots are shown
+par(mfrow=c(1,2))
+
+# the argument ylim=c(0,20) sets the scale of the y-axis
+boxplot(t(brca_expr_mat.log[1:ngenes,]), ylab="Log_2 Expression",ylim=c(0,20),
+        cex.names=0.2, las=2, pch=20, cex=0.6)
+
+boxplot(t(brca.log.sub[1:ngenes,]), ylab="Log_2 Expression",ylim=c(0,20),
+        cex.names=0.2, las=2, pch=20, cex=0.6)
+
+```
+
+
+Remember, we are **assuming** that genes with greater variance across patient samples are more important.
+
+---
+
+### Subset of samples
+
+When we're doing exploratory analysis, we'll often work with a subset of the data, such as the 500 most variable genes. Our code will run faster, and the plots are easier to interpret.  We can return to the full data set later.
+
+In this spirit, we'll consider only a subset of the patient samples. To pull out 25% of the samples, let's create a vector `our_samples` that stores the indices of every 4th sample.  We'll use this subset for now, but for the final analysis, we'll certainly want to use the whole data set.
+
+
+```{r}
+# The seq() function creates a series of numbers between the first two argument
+# With the third argument, we get every fourth column 
+our_samples <- seq(1, ncol(brca.log.sub), 4)   
+
+#Let's check that we did this correctly!                                            
+length(our_samples)
+length(our_samples)/ncol(brca.log.sub)
+
+```
+
+We've chosen 271 samples, which amount to 25% of the samples (one out of every four).
+
+Create a new object, `our_matrix` that contains only the samples we want to consider for now:
+
+```{r}
+# The matrix with the 500 genes and 271 samples 
+our_matrix <- brca.log.sub[,our_samples]
+
+our_matrix[1:5,1:5]
+
+```
+
+
+We will create the heatmap with the same function call and arguments we used in **R_Heatmaps.Rmd** for `mtcars`.
+
+
+```{r}
+# We invoke `heatmap()` the same way we did for `mtcars`
+# The last two arguments suppress labeling the rows and columns
+heatmap(our_matrix,
+        Rowv=NA, Colv=NA, scale="none", 
+        labRow="", labCol="")  
+
+```
+
+
+---
+
+### Scaling
+
+Each row is a gene, and each column is a sample.  It doesn't look right, though. There are a bunch of horizontal stripes with almost exclusively one color. This is reminiscent of what we saw with the `mtcars` features. This happens because some genes are more highly expressed than others.
+
+
+To get the relative gene expression, we will **scale** each of the genes to put them on equal footing. 
+
+
+```{r}
+# We invoke `heatmap()` the same way we did for `mtcars`
+# The last two arguments suppress labeling the rows and columns
+heatmap(our_matrix,scale="row", Rowv=NA, Colv=NA, 
+        labRow="", labCol="", 
+        zlim=c(-2, 2))
+
+```
+
+
+This representation is much richer. Features (genes in the rows) and observations (patient samples in the columns) exhibit informative relative variation with scaling.
+
+---
+
+### Dendrograms
+
+The **dendrogram** is a summary of the distance matrix that gives the pairwise distances between among all points.
+
+There are many ways to calculate the distance between two points, for example, via roads or "as the crow flies."  By default, `heatmap()` uses the **Euclidean distance** or the length of a line between two points. For more on Euclidean distance, see the Extra Work in **R_Heatmaps.Rmd**.
+
+
+```{r}
+# by default, heatmap will calculate the dendrograms and reorder
+heatmap(our_matrix,scale="row", 
+        labRow="", labCol="", 
+        zlim=c(-2, 2))
+
+```
+
+
+Wow!  We see that the tumors (columns) split up into different groups, each with similar gene expression profiles.  Similarly, different genes cluster together based on their variation across tumors.
+
+
+Is there any biological significance to these groups?  Are these groups seen only in the gene expression patterns, or is it related to biology we already know?
+
+
+---
+
+## Annotating Heatmap Clusters
+
+We same in the activity **Breast_Cancer_Patient_Data** that most samples are either ER+ or ER- tumors, depending on whether the tumor expresses high levels of receptors for estrogen.  This is really important to know because it tells us what's driving the disease and also how to treat it.  
+
+To see whether ER status is associated with the groups we see in the reordered heatmap, we'll label the samples with a "+" for ER+ breast cancers, and "." for negative.
+
+To get the information on ER+/ER-, we go back to the clinical data, `brca_clin_df`.
+
+```{r eval=FALSE}
+
+View(brca_clin_df)
+
+```
+
+
+Luckily, the patient samples are in the same order in both `brca_clin_df` and `brca_expr_mat.log`. Let's create a subset of the clinical data frame that corresponds to our gene expression matrix `our_matrix`. 
+
+
+```{r}
+#Extract the rows corresponding to our_samples 
+clin <- brca_clin_df[our_samples,]  
+
+#Pull out the "estrogen_receptor_status" feature                              
+x <- clin$estrogen_receptor_status 
+
+head(x, 10)
+
+```
+
+Assign the labels:
+
+```{r}
+# `er` will have labels + for ER positive and . for ER negative
+# Note we are using boolean expressions to assign the symbols
+er <- rep("", length(x))                  
+er[x == "Positive"] <- "+"                
+er[x == "Negative"] <- "."                
+table(er)
+
+```
+
+
+In our matrix with 500 genes and 271 patients, 57 samples are ER- and 201 are ER+.  Note than 13 samples have **missing values**.
+
+```{r}
+head(er,10)
+```
+
+The symbols match the values above!
+
+---
+
+### ER status
+
+We can add more arguments to the heatmap() function to include the new ER labels we created.
+
+
+```{r}
+# by default, heatmap will calculate the dendrograms and reorder
+# NOTE: we are giving `er` to the argument labCol
+heatmap(our_matrix,scale="row", 
+        labRow="", labCol=er, 
+        zlim=c(-2, 2))
+                                    
+```
+
+In this plot, we see about four group of samples.  Most of them have a lot of ER+ tumors (marked by the row of pluses on the bottom), while one is nearly all ER-. 
+
+Beautiful!!  We see that the clustering on gene expression data seems to recapitulate the ER status of the tumors.  A great deal of research has been done on this and other associations between gene expression profiles and the characteristics of patient tumors.
+
+---
+
+## mini-DREAM Challenge
+
+### Heatmaps for PR and HER2
+
+In the code chunks below, create heatmaps labeled with PR and HER2 status. The code follows exactly what was done for ER status above.
+
+
+
+#### PR status
+
+Create the object `pr` to annotate the columns with progesterone receptor status:
+
+* The symbol "+" for "Positive"
+* The symbol "." for "Negative"
+
+```{r,eval=FALSE}
+# This code block is similar to the one for ER status
+# replace yyyyyyyy with feature for PR status
+
+y <- clin$yyyyyyyy
+
+pr <- rep("", length(y))                     
+
+pr[y == "Positive"] <- "+"                              
+pr[y == "Negative"] <- "."                   
+
+table(pr)
+
+```
+
+
+**How many samples are PR+ and PR-?** Assign your answers to the variables `PRpos` and `PRneg`.
+
+
+```{r,eval=FALSE}
+# enter the value you obtained from the previous code chunk
+PRpos <-
+  
+PRneg <-  
+
+```
+
+
+
+Create the heatmap annotated with PR status:
+
+
+```{r,eval=FALSE}
+# Replace XX in the argument labCol to label the columns with PR status
+heatmap(our_matrix,scale="row", 
+        labRow="", labCol=pr, 
+        zlim=c(-2, 2))
+                                    
+```
+
+
+**Is there overlap in the clusters for ER- and PR-?** Assign your answer (YES/NO) to the variable `PR_ER_neg_overlap`.
+
+```{r}
+# Place YES or NO between the quotes
+PR_ER_neg_overlap <- "  "
+
+```
+
+
+**Is there overlap in the clusters for ER+ and PR+?** Assign your answer (YES/NO) to the variable `PR_ER_pos_overlap`.
+
+```{r}
+# Place YES or NO between the quotes
+PR_ER_pos_overlap <- "  "
+
+```
+
+
+
+#### HER2 status
+
+Create the object `her2` to annotate the columns with HER2 status:
+
+* The symbol "+" for "Positive"
+* The symbol "." for "Negative"
+
+
+```{r,eval=FALSE}
+# This code block is similar to the one for ER status
+# replace zzzzzzzz with feature for PR status
+
+
+
+z <- clin$zzzzzzzz
+
+her2 <- rep("", length(y))  
+
+# Complete the logical statements to assign "+" and "."
+# Follow the code we used for ER and PR status
+
+her2[z   ] <- "+"                              
+her2[z   ] <- "."                   
+
+table(her2)
+
+```
+
+
+Create the heatmap annotated with HER2 status:
+
+
+```{r,eval=FALSE}
+
+# Replace zzzz in the argument labCol to label the columns with HER2 status
+
+heatmap(our_matrix,scale="row", 
+        labRow="", labCol=zzzz, 
+        zlim=c(-2, 2))
+                                    
+```
+
+
+Follow the dendrogram over the columns of our heatmap to four main clusters. Compare the ER, PR, and HER2 annotations for the clusters.  **Which cluster corresponds to triple negative breast cancer: 1, 2, 3, or 4.**
+
+```{r,eval=FALSE}
+
+# assign your choice for cluster number
+cluster_number <- N
+
+```
+
+
+---
+
+## Create your R Markdown Report
+
+
+Let's save our work as an html file!
+
+
+### The knitr R package 
+
+
+**knitr()** is the R package that generates reports from R Markdown. R Markdown is the syntax we are using in this document, denoted by the .Rmd file type. With `knitr()` and R Markdown, we can create reports of our work in the form of Word doc, PDF, and HTML files. 
+
+An **R package** bundles together code, data, documentation, and tests, and is easy to download and share with others.
+
+
+```{r setup, include=FALSE}
+
+library(knitr)
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+Click the "Knit" button at the top of this window and select "Knit to html."
+
+
+### Submit your work
+
+```{r, eval=FALSE}
+# Load function to submitting answers to the leaderboard.
+scripts_dir <- "/home/shared/R"
+source(file.path(scripts_dir, "submission_helpers.R"))
+
+# Log into Synapse
+synLoginSecure()
+
+# Submit answers
+submission <- submit_module_answers(module = 2)
+```
+
+
+## **Congratulations** 
+
+We have analyzed clinical and gene expression data from over 1,000 patients in the TCGA Breast Cancer cohort.  Next time we will apply our R skills to analyze data from human cancer cell lines and calculate differential gene expression for models of normal breast tissue cells versus models of aggressive cancer cells.
+
+
+
+
+
