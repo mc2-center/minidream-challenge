@@ -54,26 +54,18 @@ create_module2_submission <- function() {
 create_module3_submission <- function() {
   submission_filename <- paste(Sys.getenv("USER"), "activity-3.yml", sep = "_")
   
-  determinant_n <<- my_determinant
-  dist_euclidean <<- my_dist_eucl
-  dist_canberra <<- my_dist_canb
-  if (exists("my_cluster1") && exists("my_cluster2") && exists("my_cluster3")) {
-      cluster1 <<- my_cluster1
-      cluster2 <<- my_cluster2
-      cluster3 <<- my_cluster3
-  } else {
-    cluster1 <- NULL
-    cluster2 <- NULL
-    cluster3 <- NULL
-  }
+  PRpos_guess <<- PRpos
+  PRneg_guess <<- PRneg
+  PR_ER_neg_overlap_guess <<- trimws(toupper(PR_ER_neg_overlap))
+  PR_ER_pos_overlap_guess <<- trimws(toupper(PR_ER_pos_overlap))
+  cluster_guess <<- cluster_number
   
   answers <- list(
-    determinant_n = determinant_n, 
-    dist_euclidean = dist_euclidean, 
-    dist_canberra = dist_canberra, 
-    cluster1 = cluster1,
-    cluster2 = cluster2,
-    cluster3 = cluster3
+    PRpos = PRpos_guess, 
+    PRneg = PRneg_guess, 
+    PR_ER_neg_overlap = PR_ER_neg_overlap_guess, 
+    PR_ER_pos_overlap = PR_ER_pos_overlap_guess,
+    cluster_number = cluster_guess
   )
   write_yaml(answers, submission_filename)
   submission_filename
