@@ -4,6 +4,10 @@ library(yaml)
 # library(glue)
 
 check_answer <- function(pred, key) {
+  if (is.na(pred)) {
+    return ("Your guess is missing or NA.")
+  }
+
   diff <- as.integer(pred) - as.integer(key)
   if (diff < 0) {
     return("Your guess was too small.")

@@ -4,6 +4,10 @@ library(yaml)
 # library(glue)
 
 check_answer <- function(pred, key) {
+  if (is.na(pred)) {
+    return ("Your guess is missing or NA.")
+  }
+
   diff <- as.integer(pred) - as.integer(key)
   if (diff < -1) {
     return("Your guess for mean expression level is too low.")
