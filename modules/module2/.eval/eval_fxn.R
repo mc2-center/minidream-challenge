@@ -5,9 +5,9 @@ library(yaml)
 
 check_answer <- function(pred, key) {
   diff <- as.integer(pred) - as.integer(key)
-  if (diff < -0.5) {
+  if (diff < -1) {
     return("Your guess for mean expression level is too low.")
-  } else if (diff > 0.5) {
+  } else if (diff > 1) {
     return("Your guess for mean expression level is too high.")
   } else {
     return("Nailed it!")
