@@ -346,7 +346,7 @@ The cells in A are elongated and move more quickly than the cells in B. A main d
 
 ## Challenge Question
 
-Lists of differentially expressed genes are difficult to interpret on a gene-by-gene basis. **Enrichment analysis** is a method to find biological functions associated with a *&set of genes** we have reason to believe are related.
+Lists of differentially expressed genes are difficult to interpret on a gene-by-gene basis. **Enrichment analysis** is a method to find biological functions associated with a **set of genes** we have reason to believe are related.
 
 For example, we suspect that the genes with highest relative expression in the fast cell line may have something to do with cell movement.  How can we check this?
 
