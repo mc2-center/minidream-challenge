@@ -199,7 +199,7 @@ Hyaluronic acid, collagen, and fibronectin are all common components of the **ex
 ```{r}
 # To load an imager, we read in the imager package
 library(imager)
-substr_img<-load.image(file.path(data_dir,"substrate.jpg"))
+substr_img<-load.image(file.path(data_dir,"substrate.JPG"))
 
 par(mar=c(0.5,0.5,0.5,0.5))
 plot(substr_img,axes=FALSE)
