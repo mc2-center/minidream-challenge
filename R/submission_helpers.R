@@ -74,16 +74,16 @@ create_module3_submission <- function() {
 create_module4_submission <- function() {
   submission_filename <- paste(Sys.getenv("USER"), "activity-4.yml", sep = "_")
   
-  distance_metric <<- my_distance_metric
-  cluster_method <<- my_cluster_method
-  num_clusters <<- my_num_clusters
-  p_value <<- my_p_value
+  term1_chosen <<- term1
+  term2_chosen <<- term2
+  FE1_chosen <<- FE1
+  FE2_chosen <<- FE2
   
   answers <- list(
-    distance_metric = distance_metric, 
-    cluster_method = cluster_method,
-    num_clusters = num_clusters,
-    p_value = p_value
+    term1 = term1_chosen, 
+    term2 = term2_chosen,
+    FE1 = FE1_chosen,
+    FE2 = FE2_chosen
   )
   write_yaml(answers, submission_filename)
   submission_filename
