@@ -4,18 +4,18 @@ library(yaml)
 # library(glue)
 
 check_str_type <- function(term) {
-  return ifelse(
+  return (ifelse(
     assertthat::is.string(term),
     "Nice choice!",
     "Term chosen should be a string/text."
-  )
+  ))
 }
 check_number_type <- function(n) {
-  return ifelse(
+  return (ifelse(
     assertthat::is.number(n),
     "",
     "Fold enrichment value should be a number."
-  )
+  ))
 }
 
 score_submission <- function(submission_filename) {
