@@ -7,7 +7,7 @@ check_answer <- function(pred, lower, upper) {
   if (is.na(pred)) {
     return ("Your guess is NA (missing).")
   }
-  if (pred >= lower && pred <= upper)
+  if (pred >= lower && pred <= upper) {
     return("Nailed it!")
   } else {
     return("Your answer was not correct.")
