@@ -108,7 +108,7 @@ create_module5_submission <- function() {
     mforce_mean = mforce_mean_guess,
     unbound_freq_deform = unbound_freq_deform_guess,
     mforce_mean_deform = mforce_mean_deform_guess,
-    Equation_SubDeform_MForce = Equation_SubDeform_MForce_guess
+    Equation_SubDeform_MForce = trimws(tolower(Equation_SubDeform_MForce_guess))
   )
   write_yaml(answers, submission_filename)
   submission_filename
