@@ -19,10 +19,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(imager)  # We are loading this package so we may look at images.
 
 knitr::opts_chunk$set(echo = TRUE)
-data_dir <- "/home/shared/data"
 img_dir <- "/home/shared/data/img"
-#scripts_dir <- "/home/rstudio/shared/R"
-#source(file.path(scripts_dir, "submission_helpers.R"))
 ```
 
 ### The goal of activity
@@ -280,10 +277,10 @@ What do you observe?
 
 
 What is the approximate frequency for clutches to unbound (unbound_freq)? 
-ANS: 6.7 (5-10 will be fine)
+
 
 What is the mean module force (mforce_mean)? 
-ANS: 21pN (20-22 will be fine)
+
 
 ```{r}
 # Challenge Question
@@ -293,18 +290,13 @@ ANS: 21pN (20-22 will be fine)
 
 **bonus**
 How will kon, koff, clutchNum, clutchK, actinFlow affect simulation results?
-ANS:
-higher kon, clutch will not unbound totally, higher mean force
-higher koff, higher clutch unbound frequency, lower mean force
-higher clutchNum, clutch will not unbound totally, higher mean force
-higher clutchK, higher clutch unbound frequency, higher mean force
-higher actinFlow, higher clutch unbound frequency
+
 
 Is module force = clutch bound number * clutchK? If not, why?
-ANS: no, module force = sum (clutch_dx*clutchK)
+
 
 What is the biological behavior represetned by this exercise?
-ANS: When there is a F-actin flow due to myosin contraction, F-actin will stretch the clutches, force them to unbind from the substrate, and hence the retraction of protrusions
+
 
 
 ### clutchs bind on deformable substrate
@@ -314,17 +306,17 @@ Now we can apply total clutch forces to a deformable substrate, and the deformat
 
 We need to track the clutch position
 ```{r}
-knitr::include_graphics("clutch_x.png")
+knitr::include_graphics(file.path(img_dir, "clutch_x.png"))
 ```
 
 Based on the force balance, we can derive the substrate position,
 ```{r}
-knitr::include_graphics("clutch_xsub.png")
+knitr::include_graphics(file.path(img_dir, "clutch_xsub.png"))
 ```
 
 Then the net stretch of the clutch is
 ```{r}
-knitr::include_graphics("clutch_stretch.png")
+knitr::include_graphics(file.path(img_dir, "clutch_stretch.png"))
 ```
 
 
@@ -430,26 +422,27 @@ ameanF = mean(FArray)
 
 This load-and-fail behavior was observed in the experiment.
 ```{r}
-knitr::include_graphics("load_fail.gif")
+knitr::include_graphics(file.path(img_dir, "load_fail.gif"))
 ```
 
 , and its measured deformation is similar to simulation.
 ```{r}
-knitr::include_graphics("exp_load_fail_deformation.png")
+knitr::include_graphics(file.path(img_dir, "exp_load_fail_deformation.png"))
 ```
 
 
 **Challenge Questions**
 What do you observe?
-ANS: We should see bound clutch number accumulates and unbound with time, so do module force and substrate deformation.
 
-What is the approximate frequency for clutches to unbound (unbound_freq_deform)? ANS: 0.085/s (0.07-0.1 will be fine)
+
+What is the approximate frequency for clutches to unbound (unbound_freq_deform)?
+
 
 What is the mean module force (mforce_mean_deform)? 
-ANS:80.8 pN (75-85 will be fine)
+
 
 Is substrate deformation = module force * subK? (Equation_SubDeform_MForce = yes or no) 
-ANS:yes
+
 
 ```{r}
 # Challenge Question
@@ -460,19 +453,18 @@ ANS:yes
 
 **bonus**
 How will subK affect simulation results?
-ANS: when subK is small, the system will have an equilibrium bound clutch number, and module force will keep increasing within a long period before it fails.
-when subK is large, clutches will bind and unbind very frequently, with high unbound and module force frequency
+
 
 When subK becomes very large, will the results become similar to Exercise 2?
-ANS: yes
+
 
 What is the biological behavior represented by this exercise?
-ANS: the substrate stiffness can change the clutch adhesion dynamics, and further more change the protrusion dynamics, and cell migration
+
 
 
 ### stochastic modeling of motor-clutch mechanism
 ```{r}
-knitr::include_graphics("motor_clutch_model.png")
+knitr::include_graphics(file.path(img_dir, "motor_clutch_model.png"))
 ```
 
 Stochastic simulations of the motor-clutch model (Chan & Odde, Science, 2008) has been developed and applied to predict the cell traction force, cell morphology, and F-actin flow at different substrate conditions. 
@@ -481,14 +473,14 @@ Stochastic simulations of the motor-clutch model (Chan & Odde, Science, 2008) ha
   the simulation results were consistent with experimental results for neurons contracting on polyacrylamide gel.
   
 ```{r}
-knitr::include_graphics("motor_clutch_results.png")
+knitr::include_graphics(file.path(img_dir, "motor_clutch_results.png"))
 ```
 
 
 
 ### stochastic modeling of cell migration
 ```{r}
-knitr::include_graphics("CMS.png")
+knitr::include_graphics(file.path(img_dir, "CMS.png"))
 ```
 
 By imposing a force balance between the protrusions, Bangasser, Nat Commun, 2017 successfully developed a physics-based cell migration simulator (CMS) to simulate the optimal substrate stiffness for the maximum motility of U251 glioma cells on PA gels, and subsequent work predicted the optimal cell motility with different focal adhesion sizes and distributions (Hou, Cytoskeleton, 2019), simulated the higher cancer cell motility on viscoelastic gels with faster stress relaxing (Adebowale, Gong, Hou, Nat Mat, 2021), predicted the negative durotaxis for U251 glioma cells on PA gels with stiffness gradients (Isomursu', Park', Hou', Nat Mat, 2022), and simulated the cyclic cell migration speed within 1D channels for melanoma cells (Lee, Hou, Cell Systems, 2022). By changing parameter values, the CMS can capture the differential migration features in different cell types and under drug treatments, which may link to cell transcriptomes.  Therefore, the CMS provides a consistent mechanical framework which can be used to interpret and synthesize cell migration and force measurements across glioblastoma subtypes in order to predict cell migration based on glioblastoma cell transcriptomes.
@@ -498,7 +490,7 @@ The CMS comprises multiple protrusions or modules which were nucleated randomly 
 
   the simulation results were consistent with experimental results for U251 glioma cells on the polyacrylamide gel
 ```{r}
-knitr::include_graphics("CMS_result.png")
+knitr::include_graphics(file.path(img_dir, "CMS_result.png"))
 ```
 
 
@@ -507,19 +499,16 @@ knitr::include_graphics("CMS_result.png")
 
 You're now ready to submit the prediction. Just run the chunk below, a file with your prediction will be uploaded to Synapse and submitted to the challenge. You'll be able to see the results of your prediction on the mini-DREAM scoreboards, with the submission ID that gets printed below.
 
-```{r}
-#library(synapser)
+```{r, eval=FALSE}
+# Load function to submitting answers to the leaderboard.
+scripts_dir <- "/home/shared/R"
+source(file.path(scripts_dir, "submission_helpers.R"))
 
-# If you didn't submit an answer for Module 0, remove the '#'s
-# on the next 2 lines and enter your Synapse username and password
-# before running this chunk.
+# Log into Synapse
+synLoginSecure()
 
-#synLogin('my_synapse_username', 'my_synapse_password', rememberMe = TRUE, silent = TRUE)
-
-# If you submitted for Module 0, this should work.
-
-#synLogin(silent = TRUE)
-#submission <- submit_module_answers(module = 7)
+# Submit answers
+submission <- submit_module_answers(module = 5)
 ```
 
 

@@ -93,16 +93,22 @@ create_module4_submission <- function() {
 create_module5_submission <- function() {
   submission_filename <- paste(Sys.getenv("USER"), "activity-5.yml", sep = "_")
   
-  nc_bound_final <<- nc_bound_final
-  time_half <<- time_half
-  unbound_freq <<- unbound_freq
-  mforce_mean <<- mforce_mean
+  nc_bound_final_guess <<- nc_bound_final
+  time_half_guess <<- time_half
+  unbound_freq_guess <<- unbound_freq
+  mforce_mean_guess <<- mforce_mean
+  unbound_freq_deform_guess <<- unbound_freq_deform
+  mforce_mean_deform_guess <<- mforce_mean_deform
+  Equation_SubDeform_MForce_guess <<- Equation_SubDeform_MForce
 
   answers <- list(
-    nc_bound_final = nc_bound_final,
-    time_half = time_half, 
-    unbound_freq = unbound_freq,
-    mforce_mean = mforce_mean
+    nc_bound_final = nc_bound_final_guess,
+    time_half = time_half_guess, 
+    unbound_freq = unbound_freq_guess,
+    mforce_mean = mforce_mean_guess,
+    unbound_freq_deform = unbound_freq_deform_guess,
+    mforce_mean_deform = mforce_mean_deform_guess,
+    Equation_SubDeform_MForce = Equation_SubDeform_MForce_guess
   )
   write_yaml(answers, submission_filename)
   submission_filename
