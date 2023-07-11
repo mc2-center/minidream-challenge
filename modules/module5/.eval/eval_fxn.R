@@ -29,7 +29,7 @@ score_submission <- function(submission_filename) {
     "Your answer was not correct."
   )
 
-  answers["nc_bound_comment"] <- nc_bound_msg
+  answers["nc_bound_comment"] <- nc_bound_final_msg
   answers["time_half_comment"] <- time_half_msg
   answers["unbound_freq_comment"] <- unbound_freq_msg
   answers["mforce_mean_comment"] <- mforce_mean_msg
