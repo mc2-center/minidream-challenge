@@ -9,15 +9,12 @@ fi
 #----------------------------
 # Activate conda environment
 #----------------------------
-source /home/lpeng/miniconda3/bin/activate /home/lpeng/miniconda3/envs/minidream-2022
-
-#----------------------------
-# Validate submissions
-#----------------------------
-# Remove --send-messages to do rescoring without sending emails to participants
-# python $script_dir/challenge.py -u "synapse user here" --send-messages --notifications validate --all >> $script_dir/log/score.log 2>&1
+source /home/vchung/miniconda3/bin/activate /home/vchung/miniconda3/envs/minidream
 
 #----------------------------
 # Score submissions
 #----------------------------
-python3 $script_dir/challenge.py -u "bgrande" -u "mnikolov" -u "linglp0122" --send-messages --notifications score --all >> $script_dir/log/score.log 2>&1
+python3 $script_dir/challenge.py \
+  --send-messages \
+  --notifications score \
+  --all >> $script_dir/log/score.log 2>&1

@@ -1,98 +1,123 @@
 ---
-title: "Breast Cancer Patient Data"
+title: "mini-DREAM Breast Cancer Patient Data"
 author: "Diana Murray"
-date: "June 26, 2022"
+date: "June 4, 2023"
 output:
   html_document:
-    toc: yes
-    toc_float: yes
-    theme: spacelab
-    code_folding: show
-  pdf_document:
-    toc: yes
+    toc: true
+    toc_float: true
+    theme: "spacelab"
+    code_folding: "show"
 ---
 
-## About this activity
+In this activity, we will learn new skills in R with a large real-life dataset!
 
-In this activity, we will put our new skills in R to use with a large real-life dataset!
+We will load and examine a data frame that contains clinical information from over 1,000 breast cancer patients from *The Cancer Genome Atlas (TCGA)*. 
 
-You will load and examine an [R data frame](https://dream-high.shinyapps.io/Data_Frames_Tutorial/) that contains clinical information from over 1,000 breast cancer patients from The Cancer Genome Atlas (TCGA). 
 
-While [R data frame](https://dream-high.shinyapps.io/Data_Frames_Tutorial/) looks a bit ugly here, in our final document, there will be a nice web link to `R data frame`.
+TCGA characterized over 20,000 cancer samples spanning 33 cancer types with genomics. 
 
-[The Cancer Genome Atlas or TCGA](https://www.cancer.gov/about-nci/organization/ccg/research/structural-genomics/tcga) characterized over 20,000 cancer samples spanning 33 cancer types with genomics. 
-
-In 2012 and 2018, the TCGA Network reported findings from the analysis of tumor samples from hundreds of breast cancer patients. Throughout this course, we will examine some of the different data types that were used and the computational analyses that were performed.  
+Throughout this course, we will examine some of the different data types and the computational analyses that were performed to decipher this data.  
 
 ---
 
 ## Preliminaries
 
-#### The knitr R package 
-
-**knitr()** is the R package that generates the report from R Markdown. We can create reports as Word doc, PDF, and HTML files. 
-
-An R package bundles together code, data, documentation, and tests, and is easy to download and share with others.
-
-In RStudio, code chucks appear in grey (by default) and begin and end with triple back ticks. 
-We run code chunks by **clicking the green hour in the upper right corner of the chunk**.
-
-This website will help you understand what's going on with [R code chunks](https://rmarkdown.rstudio.com/lesson-3.html). 
+These are the tasks we need to do before we begin our analysis.
 
 
-```{r setup, include=FALSE}  
+### Load packages
 
-# Lines beginning with the hash tag symbol (like this one!) allow us to include 
-# comments in our code. This is a VERY important practice because it 
-# helps us and others to understand what we are doing.
-# Curly braces provide tell us what will happen when we knit our document. 
-# In this case include=FALSE prevents code and results from appearing in the finished file.
+Many users and developers contribute **packages** to R that contain useful functionality not available with the default R distribution.  At the beginning of our activities, we load the special packages we need.
 
-library(knitr)
-knitr::opts_chunk$set(echo = TRUE)
+**Click the green arrow in the top right corner of the *code chunk* to run the code**
+
+```{r,include=FALSE}
+# imager provides functions for reading and displaying images
+# Annotating our documents with pictures enhances communication
+library(imager)
 
 ```
 
-#### The data directory
 
-We will create an object that holds the name of the directory where the TCGA data resides. 
-This is good R coding practice because we can apply all we do below to a data set 
-in a different directory by changing a single variable (`data_dir`).
+### The data directory
+
+We will create an object that holds the name of the directory where the TCGA data resides. This is good programming practice: We can examine data in a different location by changing the directory once at the beginning of our code.
+
 
 ```{r}
-
-data_dir <- "/home/data"    # The data we are using is located in this directory 
-                             # on our cloud computing server.
+# The data we are using is located in /home/shared/data on our cloud server.
+data_dir <- "/home/shared/data"     
 
 # Look in your Environment tab!
+```
+
+---
+
+## Breast Cancer Basics
+
+
+Breast cancer most often begins in the ducts.
+
+
+```{r,warnings=FALSE}
+# Note that objects in R can be images.
+# Images are matrices of pixel values.
+
+# The `file.path()` function tells `load.image()` where our image resides.
+anatomy_img<-load.image(file.path(data_dir,"breast_anatomy.jpg"))
+
+# `par()` defines parameters for plotting
+# The argumant `mar` accepts four values
+par(mar=c(2,2,2,2))
+
+plot(anatomy_img,axes=FALSE)
+
+```
+
+
+In breast cancer, the cells lining the ducts grow and divide abnormally.
+
+
+```{r,warnings=FALSE}
+# The `file.path()` function tells `load.image()` where our image resides.
+duct_cells_img<-load.image(file.path(data_dir,"duct_cells.jpg"))
+
+par(font.sub=4, mar=c(2,2,2,2))
+
+plot(duct_cells_img,axes=FALSE)
+
+```
+
+We will examine patient data for these ductal breast cancer types.
+
+
+Metastasis involves the development of secondary malignant growths at a distance from a primary site of cancer.
+
+```{r,warnings=FALSE}
+# The `file.path()` function tells `load.image()` where our image resides.
+meta_img<-load.image(file.path(data_dir,"metastasis.jpg"))
+
+par(font.sub=4, mar=c(2,2,2,2))
+
+plot(meta_img,axes=FALSE)
 
 ```
 
 
 ---
 
-## Loading the data
-
-**ASIDE**: Notice that the text portions of this document contain many symbols.  Sections have different numbers of hash tags (#) and variables and inline code have back ticks.  You can get a [*Markdown Cheat Sheet*](https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf) to make your own formatting changes.
-
+## Loading data
 
 Throughout the course, we will be loading data from R files with the extension `.RData`. 
-An example is the file `brca_clin.RData` which we examine below.
+An example is the file `brca_clin.RData` which we will work with in this activity.
 
-`.RData` files are binary files (i.e., not human readable) that hold R objects, such as [vectors, lists, matrices, and data frames](https://dream-high.org/tutorials). 
-
-The R data frame object in the `brca_clin.RData` file is the result of previous R computations that put raw data downloaded from the TCGA project into **tidy** form. 
-
-Tidy data sets have consistent structure and are easy to manipulate, visualize, and model.
-They are "clean" and ready for us to use! 
-
-We could spend the entire course learning how to put raw data in tidy form, but our goal is to understand and analyze the data, which mostly occurs *after* tidying the data.
+`.RData` files are binary files (i.e., not human readable) that hold R objects, such as data frames. 
 
 
 ```{r}
-
-# With the function `load()` we read in the file data file "brca_clin.RData".
-# The file.path() function tells `load()` where our data resides.
+# With the function `load()` we read in the data file "brca_clin.RData".
+# The `file.path()` function tells `load()` where our data resides.
 # The argument "verbose = TRUE" makes `load()` tell us what R objects are being loaded.
 # The objects will also appear in our "Environment" tab.
 
@@ -106,89 +131,149 @@ The object `brca_clin_df` was named to be be descriptive.
 * "clin" is short for "clinical data"
 * "df" stands for "data frame"
 
+Data frames are data displayed as a table. 
+
+In data science, columns in a data frame are features and rows are records or observations.
+
 ---
 
 ## Viewing the data
 
 The **Environment** tab gives us basic information on the objects that were loaded.
 
-There are 1082 observations (patients) with 27 variables. 
+There are 1082 observations (patients) with 27 variables (clinical features). 
 
 We can use some simple R functions to examine the data in more detail.
 
-* `dim()` tells us the dimensions (# row, # columns) of the object.
+* `dim()` tells us the dimensions (# rows, # columns) of the object.
 * `head()` returns the first several rows of the objects.
-* **indexing** allows us to look at rows and columns we choose.
+* indexing allows us to look at rows and columns we choose.
 
 
 ```{r}
-
 # How many rows and columns are in our object?
 dim(brca_clin_df)
 
 ```
 
-Is the output what we expect? Check your **Environment** again. 
+Is the output what we expect? Check your Environment tab. 
 
-
-```{r}
-
+```{r,eval=FALSE}
 # Let's take a first look at the data in our object
 # `head` gives us the first six rows and ALL of the columns
-
 head(brca_clin_df)
 
 ```
 
-Since our data frame has many columns, we can scroll through the columns by clicking on the black arrow in the top right corner.
 
-In data science, columns are also referred to as [features or feature variables](https://www.datarobot.com/wiki/feature/). 
+Scroll through the columns by clicking on the arrow in the top right corner of the table.
+
+
+We can see the entire data frame more conveniently in a new tab: 
+
+```{r,eval=FALSE}
+View(brca_clin_df)
+
+```
+
 
 Notice the column names. Let's define a few:
+
  + `bcr_patient_barcode`  provides anonymous identifiers for the patients.
- + `estrogen_receptor_status`  designates whether the tumor is ER+ or ER-
- + `progesterone_receptor_status` designates whether the tumor is PR+ or PR-
- + `her2_receptor_status`  designates whether the tumor is HER2+ or HER2- 
+ + `histological_type` describes the ductal invasion.
+ + `estrogen_receptor_status`  designates whether the tumor is ER+ or ER-.
+ 
 
-We will be using these features in future hands-on coding sessions. In this session, we will explore the information they contain.
-
-**ASIDE**: We can combine functions with text to get more informative output:
+Use indexing to view specific elements of the data frame:
 
 ```{r}
+# Look at a single element
+# The first number denotes row, the second number denotes column
+# The first feature for the patient in row 1
+brca_clin_df[1,1]
 
-dim_df <- dim(brca_clin_df)  # We should get the same result as before.
+```
+
+
+```{r}
+# The function`c()` combines values into a list
+# The colon operator `:` creates a sequence of numbers
+c(1:3,8,15)
+
+```
+
+Let's look at the last three features for a group of patients.
+
+```{r}
+brca_clin_df[c(1:3,8,15),25:27]
+
+```
+
+
+### Practice
+
+Change the index numbers to explore the data frame. 
+
+
+#### Practice 1: Look at a single element
+
+```{r}
+# Look at a single element
+# The first number denotes row, the second number denotes column
+brca_clin_df[100,15]
+
+```
+
+
+
+#### Practice 2: Look at the data for a single patient.
+
+```{r}
+# Look at a single row or patient
+# `t()` transposes the data 
+t(brca_clin_df[1,])
+
+```
+
+
+
+#### Practice 3: Look at ranges of values using the the combine function and the colon operator.
+
+```{r}
+# Examine a set of features for a group of patients
+brca_clin_df[c(20,30,40),1:5]
+
+```
+
+
+
+#### Practice 4: More meaningful output
+
+**Readability**: We can combine functions with text to get more informative output.
+
+Remember that the `dim()` function provides two numbers:
+
+- The number of rows
+- The number of columns
+
+```{r}
+# Assign the dimensions of the data frame to an object.
+
+dim_df <- dim(brca_clin_df)  
 
 # Since `dim_df` has two values, we can choose each separately with indexing.
+# The function paste() allows us to print text and numbers together.
 
 print(paste("The clinical data frame has",dim_df[1],
               "rows and",dim_df[2],"columns."))
 
-# The function paste() allows us to print text and numbers together.
-
 ```
 
-This is more comprehensible for our report!
+#### Practice 4: Writing files
 
-
-Since this is a relatively small data frame (1082 rows is small compared to the gene expression data frames we will consider!), we can use the `View()` function to examine it in detail. 
-
-`View()` will open the entire object in a new tab.
-
-```{r include=FALSE}
-
-# Uncomment the next line by removing the `#` symbol to `View()` the data
-# View(brca_clin_df)  
-
-```
-
-Notice that the data frame opens in a new window with the title `brca_clin_df`.
-
-Wow! That's a lot of information.  But it's only a fraction of the information available from TCGA.
-
-What are the features in the data frame?  We can collect the column names.
+What are all of the features in the data frame?  We can collect the column names.
 
 ```{r}
-
 # Many function names in R are intuitive.
 # colnames gives the names of the columns.
 
@@ -196,16 +281,15 @@ colnames(brca_clin_df)
 
 ```
 
+Notice there are 27 column names for the 27 columns.
+
 
 ```{r}
-
 # We can save the feature names to a file for reference!
-# `write.csv` saves the output of our command to a csv file 
+# `write.csv()` saves the output of our command to a csv file 
 # in your working directory.
 
-# Uncomment the next line to run the code.
-
-# write.csv(colnames(brca_clin_df),"features.csv")
+write.csv(colnames(brca_clin_df),"features.csv")
 
 ```
 
@@ -213,65 +297,56 @@ Check your directory to see if the file is there.
 
 ---
 
-## Examining the Features
+## Examining features in the clinical data frame
 
-Examining the data frame in tabular form with `View()` gives us an idea of the types of information included, but it's hard to take in, by eye, the values for all 1,082 patients for any given feature, such as `gender`, `vital_status`, or `estrogen_receptor_status`. 
+Viewing the data frame gave us an idea of the types of information included, but how do we summarize the values for all 1,082 patients for a given feature, such as `gender`, `vital_status`, or `estrogen_receptor_status`? 
 
 ### Gender
 
-For example, it looks like all of the patients are "FEMALE", but is this true?
+It looks like all of the patients are "FEMALE", but is this true?
 
 The `table()` function is VERY useful. It summarizes the data for us.
 
 ```{r}
-
-# We can get a column by designating its column index.
-
-table(brca_clin_df[,2])
-
-# Or we can use the column name, for example, with `$gender`.
-
+# The $ operator can be used to select a column with its name
+# We can get the column for gender information with `$gender`.
 table(brca_clin_df$gender)
 
 ```
 
 There are a dozen male patients in this cohort. 
 
-A Patient Advocate, Bob Ritter, who works with the Cancer System Biology Consortium (CSBC) and the Physical Sciences in Oncology (PS-ON) Program talks about his experience with breast cancer.  
-
-You can read more about Bob's amazing and courageous story here [Bob Riter: The Male Breast Cancer Coalition](https://malebreastcancercoalition.org/Survivor%20Stories/bob-riter/).
-
 
 ### Age at Diagnosis
 
-The function `hist` will give us a histogram of numerical data. 
+The function `hist()` creates a histogram of numerical data. 
 Let's see what values are in the feature `age_at_diagnosis`.
 
 ```{r}
-
+# The $ operator can be used to select a column with its name.
 hist(brca_clin_df$age_at_diagnosis)
 
 ```
 
 
-As many measurements in nature, the variable `age_at_diagnosis` follows a normal distribution (i.e. it is bell curve).
+As with many measurements in nature, the variable `age_at_diagnosis` follows a normal distribution (i.e. it is bell curve).
 
-This is nice, but we should label our axes!  
-We can do this by adding *argument* to the function `hist()`.
-
+In our plot, we should label our axes and add a title!  
 
 ```{r}
-
+# The $ operator can be used to select a column with its name.
+# `xlab` and `main` are arguments to `hist()`.
 hist(brca_clin_df$age_at_diagnosis,
-     xlab="Age at Diagnosis",
-     main="Distribution of Ages")
+     xlab="Age at Diagnosis",      #label the x-axis
+     main="Distribution of Ages")  #Add a title
 
 ```
 
-Remember, we can always use the `help()` functions to learn more about what a function does and what arguments it takes.
 
-```{r}
+Remember, we can always use the `help()` function to learn more about what a function does and what arguments it takes.
 
+```{r,eval=FALSE}
+# Get the help page for the function `hist()`
 help(hist)
 
 ```
@@ -280,30 +355,37 @@ help(hist)
 
 ### Estrogen Receptor status
 
-Many breast cancer tumors are estrogen receptor (ER) positive.  How many ER+ and ER- tumors are in our dataset?  
+Breast cancer cells are tested to see if they have estrogen receptors. When the hormone estrogen attaches to its receptors, it stimulates the cancer to grow. Cancers are called **estrogen receptor-positive (ER+)** or **estrogen receptor-negative (ER-)** based on whether or not they have these receptors. 
 
-We saw above that there's a data frame feature called `estrogen_receptor_status`.
+Knowing the estrogen receptor status is important in deciding treatment options.
+
+Many breast cancer tumors are estrogen receptor (ER) positive.  How many ER+ and ER- tumors are in the TCGA breast cancer cohort?  
+
+In the previous section, we saw there is a feature called `estrogen_receptor_status`.
 
 ```{r}
-
+# The $ operator can be used to select a column with its name.
 table(brca_clin_df$estrogen_receptor_status)
 
 ```
 
-Some samples do not have information on receptor status (either "[Not Evaluated]" or "Indeterminate").  
+Some samples do not have information on receptor status, either "[Not Evaluated]" or "Indeterminate".  
 
-It is usually the case with real-life data that not all records (here, patients) have values for all features in the data frame.
+It is usually the case with real-life data that not all records (here, patients) have values for all features.
 
-So when working with complex data sets like this, we have to be aware that there may be missing values. We will continually be on the lookout for **missing values** in our activities!
+So when working with complex data sets like this, we have to be aware that there may be missing values. 
+
 
 
 ### Progesterone Receptor status
+
+Like estrogen, progesterone is a hormone that stimulates breast cancer cells to grow.
 
 Let's look at the status of the progesterone receptor negative (PR).
 There's a data frame column called `progesterone_receptor_status`.
 
 ```{r}
-
+# The $ operator can be used to select a column with its name.
 table(brca_clin_df$progesterone_receptor_status)
 
 ```
@@ -311,80 +393,58 @@ table(brca_clin_df$progesterone_receptor_status)
 
 According to these summaries, there are 796 ER+ samples and 689 PR+ samples. 
 
-How many samples have positive status for both estrogen and progesterone receptors?  
-In other words, how many samples have both ER+ and PR+?
+How many samples have positive status for both estrogen and progesterone receptors?  In other words, how many samples have both ER+ and PR+?
 
-We want to find the patients (rows in `brca_clin_df`) with 
+We want to find the patients (rows in `brca_clin_df`) that have
 
 brca_clin_df$estrogen_receptor_status == "Positive"
 
-AND
+**AND**
 
 brca_clin_df$progesterone_receptor_status == "Positive".
 
-We use `==` to find the cases that have the value "Positive", and
-
-`&` takes only those samples that meet **both** criteria.
-
-The function `nrow()` will give us the number of rows. 
-
-Let's put the pieces together:
 
 ```{r}
-
-# We apply the conditions to the rows.
-# We save the results to a variable called `ERpos_PR_pos` 
-# which allow us to use the data later.
-
+# The operator == finds instances that contain the value "Positive"
+# The & operator ensures we apply both conditions.
+# Save the results to a variable called `ERpos_PR_pos` 
 ERpos_PRpos <- brca_clin_df[(brca_clin_df$estrogen_receptor_status == "Positive" 
                &
                brca_clin_df$progesterone_receptor_status == "Positive"),  ]
 
+# How many patients (rows) have both ER+ and PR+?
 nrow(ERpos_PRpos)
 
 ```
 
-We could also do this in one step:
+
+The overlap between the 796 ER+ tumors and 689 PR+ tumors is 672. 
+
+*Many breast cancer tumors are both ER+ and PR+.*
+
+We can make this output more readable for our report.  Remember, we already saved this data frame result to the object `ERpos_PRpos`.
 
 ```{r}
+# The function paste() allows us to print text and numbers together.
 
-nrow(brca_clin_df[(brca_clin_df$estrogen_receptor_status == "Positive" &
-                   brca_clin_df$progesterone_receptor_status == "Positive"),  ])
-
-```
-
-Overall, the overlap between the 796 ER+ tumors and 689 PR+ tumors is 672. 
-
-
-We can make this output more readable for our report!  Remember, we already saved this data frame result to the object `ERpos_PRpos`.
-
-```{r}
-
-
-print(paste("The number of samples with both ER+ and PR+ is ", nrow(ERpos_PRpos)))
-
-# Again, the function paste() allows us to print text and numbers together.
+print(paste("The number of samples with both ER+ and PR+ is", nrow(ERpos_PRpos)))
 
 ```
-
-Many breast cancer tumors are *both* ER+ and PR+.
 
 
 ### HER2 status
 
-HER2 is stands for the Receptor tyrosine-protein kinase erbB-2.
+HER2 is the gene name for the Receptor tyrosine-protein kinase erbB-2; it helps control ceel growth.
 
-There's a data frame column called "her2_receptor_status".
+There is a data feature called "her2_receptor_status."  You can see this by using the `colnames()` function as above.
 
 ```{r}
-
+# The $ operator can be used to select a column with its name.
 table(brca_clin_df$her2_receptor_status)
 
 ```
 
-In addition to the missing values we found for ER and PR ([Not Available] and Indeterminate), HER2 status can also be "Equivocal" and "Indeterminate." 
-
-But still, we are interested mainly in "Positive" and "Negative."
+In addition to the missing values we found for ER and PR ([Not Available] and Indeterminate), HER2 status can also be "Equivocal" and "Indeterminate."
 
 ---
 
@@ -395,65 +455,43 @@ Triple negative breast cancer samples are
  + estrogen receptor negative (ER-)
  + progesterone receptor negative (PR-)
  + HER2 negative (HER2-).
+ 
+Triple negative breast cancer is agressive and difficult to treat.
 
-How many samples have "Negative" status in all three cases?
+How many samples have *"Negative"* status in all three cases?
 
-As we see from the data frame itself and the three code chunks above, the pieces of information we need are in the columns called
+The pieces of information we need are in the columns called
 
  + estrogen_receptor_status
  + progesterone_receptor_status
  + her2_receptor_status
 
 
-Let's make a data frame `receptor_status` that contains the sample names (`bcr_patient_barcode`) and the three receptor status features.
+Let's make a data frame `receptor_status` that contains the sample names (`bcr_patient_barcode`) and the three receptor status features. We can do this with indexing or by pulling columns out of the data frame by column name.
 
 ```{r}
+# The $ operator can be used to select a column with its name.
 sample_id <- brca_clin_df$bcr_patient_barcode
 er_status <- brca_clin_df$estrogen_receptor_status
 pr_status <- brca_clin_df$progesterone_receptor_status
 her2_status <- brca_clin_df$her2_receptor_status
 
+# `cbind()` takes each vector as a column in a new data frame
 receptor_status<- cbind(sample_id,er_status,pr_status,her2_status)
 
-# Having the results in a data frame object allows us to do operations on it.
-
-dim(receptor_status)
-head(receptor_status)
-```
-
-
-Let's organize the output to be a bit more readable with *newlines* `\n`.
-
-
-```{r}
-
-sample_id <- brca_clin_df$bcr_patient_barcode
-er_status <- brca_clin_df$estrogen_receptor_status
-pr_status <- brca_clin_df$progesterone_receptor_status
-her2_status <- brca_clin_df$her2_receptor_status
-
-receptor_status<- cbind(sample_id,er_status,pr_status,her2_status)
-
-# Having the results in a data frame object allows us to do operations on it.
-
-print("We created a new data frame `receptor_status` that contains onle the patient ids and the features for the three receptors ER, PR, and HER2.")
-
-cat("\n")  # This function adds a blank line in the output.
-
-print(paste("The object `receptor_status` has ",dim(receptor_status)[1], 
-            "rows and ", dim(receptor_status)[1]," columns."))
-
-cat("\n")  # This function adds a blank line in the output.
-
-print("The first few rows of `receptor_status` are:")
-
-head(receptor_status)
 ```
 
 
 The data frame `receptor_status` contains a subset of the full data frame `brca_clin_df`.
 
-From `receptor_status`, we'll create another dat aframe `tnbc` (for triple negative breast cancer) that contains only those samples that have "Negative" status for all three receptors.
+```{r}
+# We can perform operations on the new dataframe
+dim(receptor_status)
+head(receptor_status)
+
+```
+
+From `receptor_status`, we'll create another data frame `tnbc` (for triple negative breast cancer) that contains only those samples that have *"Negative"* status for all three receptors.
 
 ```{r}
 
@@ -461,279 +499,138 @@ tnbc <- receptor_status[(receptor_status[,2]=="Negative"&
                         receptor_status[,3]=="Negative"&
                         receptor_status[,4]=="Negative"),]
 
+# Let's check out the new dataframe tnbc
 head(tnbc)
 
 nrow(tnbc)
 
 ```
 
-So overall, 114 samples out of 1082 total samples correspond to Triple Negative Breast Cancer, the most aggressive type of primary breast cancer. And we know which samples those are because we recorded this information in the object `tnbc`. 
+So overall, 114 samples out of 1082 total samples correspond to Triple Negative Breast Cancer, the most aggressive type of primary breast cancer.   
 
 
-Since we know `sample_id` for the samples with Triple Negative Breast Cancer, we can add additional information about them to our object `tnbc`.
+### Histology
 
-First, we'll use the function`match()` the `sample_id` column in `tnbc` with the `bcr_patient_barcode` column in `brca_clin_df`.
-
-```{r}
-
-a <- match(tnbc[,1],brca_clin_df[,1])
-head(a)
-
-```
-
-These numbers are the rows that correspond to the samples in `tnbc`. 
-
-Let's add the `gender` and `vital_status` columns (columns 2 and 7) from `brca_clin_df` for these samples to `tnbc`.
-
+Create a table for "histological_type". 
 
 ```{r}
-
-tnbc <- cbind(tnbc, brca_clin_df[a,c(2,7)])   
-
-# `a` is a vector of the row numbers we want.
-# c(2,7) collects the information from columns 2 and 7
-
-
-head(tnbc)
-
-```
-
-
-You can use `View()` to see the information for all 114 samples in `tnbc`.
-
-
-```{r include=FALSE}
-
-# Uncomment the next line to `View()` the data
-# View(tnbc)  
-
-```
-
----
-
-## Practice
-
-Feel free to modify the code chunks above or to create new code chunks!
-
-#### Practice 1
-
-Examine other features in `brca_clin_df` using the `table()` function and either indexing or specifying the column name.
-
-For example, both commands in the next code chunk provide tables of the information in column 16 which corresponds to "histological_type". 
-
-
-```{r}
-
-table(brca_clin_df[,15])
 
 table(brca_clin_df$histological_type)
 
 ```
 
-We see that most of the breast cancer samples are either "Infiltrating Ductal Carcinoma" or "Infiltrating Lobular Carcinoma", the two most common types of breast cancer.
+Most of the breast cancer samples are either "Infiltrating Ductal Carcinoma" (774 samples) or "Infiltrating Lobular Carcinoma" (201 samples), the two most common types of breast cancer.
 
-How do we get **just** the number of samples with `Infiltrating Ductal Carcinoma`?
-
-```{r}
-
-# Look at the table to see that `Infiltrating Ductal Carcinoma` 
-# is the third item in the table
-
-# View(table(brca_clin_df$histological_type))
-
-```
+We can look for a specific instance of an histological type by indexing on type name. 
 
 ```{r}
-
 # Save this number to a new object
-
-N_ductal <- table(brca_clin_df$histological_type)[3]
+N_ductal <- table(brca_clin_df$histological_type)["Infiltrating Ductal Carcinoma"]
 
 print(N_ductal)
 
 ```
 
-#### mini-DREAM Challenge submission part 1
+## mini-DREAM Challenge 1
 
-How many samples are of histological_type "Infiltrating Lobular Carcinoma"?
+Stage II cancer is growing, but it is still contained in the breast or the growth has extended only to nearby lymph nodes. 
 
-Save your result to an object called N_lobular.
+How many patients have stage II cancer?
 
 ```{r}
+# First find out what the values are for `pathologic_stage`
+table(brca_clin_df$pathologic_stage)
+```
 
-# Uncomment the code and replace N with the correct index for "Infiltrating Lobular Carcinoma"
+X denotes indeterminate stage.
 
-# N_lobular <- table(brca_clin_df$histological_type)[N]
+```{r,eval}
 
+# Uncomment the code, replace xxxxxx with the correct feature name and yyyyyy with the data fram name for stage 2
+
+# N_stage2 <- table(brca_clin_df$xxxxxx)["YY"]
+
+# print(N_stage2)
 
 ```
 
 
-#### mini-DREAM Challenge submission part 2
 
-How many samples are "TUMOR FREE"? 
+## mini-DREAM Challenge 2
 
+What is the `tumor_status` across patients?
 
 ```{r}
+table(brca_clin_df$tumor_status)
+```
 
-# First find out which feature provides information on "TUMOR FREE"
-# Uncomment
+How many samples are "WITH TUMOR"? 
 
-# View(brca_clin_df)
-
+```{r}
+# uncomment the code and assign the correct value to `N_tumor`
+# N_tumor <- 
 
 ```
 
+How many patients with `tumor_status` = "WITH TUMOR" also have `pathologic.stage` = "II"? 
 
-Uncomment one of the lines in the code chunk to get the summary information that gives the number of "TUMOR FREE" samples
+First, create a data frame with the samples that meet these criteria.
 
 ```{r}
+# Uncomment the next three lines of code and replace YY and XXXXX with the correct values
 
-#my_data_frame <- table((brca_clin_df$xxxxx_yyyyyy))
-
-
-#my_data_frame <- table((brca_clin_df[,NN]))
+# tumor_II<-brca_clin_df[(brca_clin_df$pathologic_stage=="YY"
+#                 &
+#                  brca_clin_df$tumor_status=="XXXXX"),]
 
 ```
 
-
-Save the number for "TUMOR FREE" samples to the object `N_tumor_free` by replacing MMM.
+Then, calculate the size of this cohort.
 
 ```{r}
-# Uncomment the code to run it
+# Choose a function ffff to determine how many rows (patients) meet this condition
 
-# N_tumor_free <- MMM
+# ffff(tumor_II)
+```
 
+Finally, assign your result.
+
+```{r}
+# Uncomment and assign the value you obtain
+
+# N_tumor_II <-
 
 ```
 
+You will have found that about half of the tumors in this cohort are stage II.  
 
-Submit "N_lobular" and "N_tumor_free" to the leaderboard.
+Stage II breast cancer is usually treated by surgical removal followed by radiation. 
+
+## Submit your work
+
+You're almost done!  Before you leave, submit your answers to the leaderboard.
 
 ```{r}
-# Load function to submitting answers to the leader board
+# Load function to submitting answers to the leaderboard.
 scripts_dir <- "/home/shared/R"
 source(file.path(scripts_dir, "submission_helpers.R"))
 
 # Log into Synapse
-synLoginSecure()  # You might be prompted for your username and password
+synLoginSecure()
 
 # Submit answers
 submission <- submit_module_answers(module = 1)
 ```
 
-You can now return to the **mini-DREAM** Challenge site on Synapse. **Make sure to save your work before you leave!**
+You can now return to the **mini-DREAM** challenge site to check on the submission status. **Make sure to save your work before you leave!**
 
-**Great work!!**.  We have learned a lot about breast cancer by examining data systematically collected from patients. It is great that these patients gave their consent to be part of TCGA. The data is **anonymized** so that it cannot be traced back to any particular person. TCGA data is publicly available and used by researchers worldwide to improve our ability to diagnose, treat, and prevent cancer.  
+## Wrapping up
 
-In future sessions, we will be introduced to the gene expression data for these patients. 
+**Great work!!**.  
 
-
-#### BONUS Practice 1
-
-Do the same with other features in `brca_clin_df`.
-
-```{r eval = FALSE}
-
-# Replace NN with the column number you're interested in.
-# Remember to uncomment the code lines!!
-
-# table(brca_clin_df[,NN])
-
-# Replace column_name with the name of the column in `brca_clin_df`
-
-# table(brca_clin_df$column_name)
-
-```
+We have learned a lot about breast cancer by examining data systematically collected from patients. It is great that these patients gave their consent to be part of TCGA. The data is **anonymized** so that it cannot be traced back to any particular person. TCGA data is publicly available and used by researchers worldwide to improve our ability to diagnose, treat, and prevent cancer.  
 
 
-
-#### BONUS: Practice 2
-
-Create a data frame for the ER+ and PR+ patient samples.  In the code chucks for triple negative breast cancer, we created the variables `sample_id`, `er_status` and `pr_status`, and used the function `cbind()` to create a data frame object called `receptor_status`. Take a look at that object again:
-
-```{r eval = FALSE}
-
-dim(receptor_status)
-
-head(receptor_status)
-
-```
-
-
-Create a new object `hormone_receptor_positive` that contains only the samples where er_status and pr_status are "Positive".
-
-```{r eval = FALSE}
-
-# Replace "Feature_value" with the value you want.
-
-hormone_receptor_positive<- receptor_status[(receptor_status[,2]=="Feature_value"&
-                                             receptor_status[,3]=="Feature_value"),]
-                        
-head(hormone_receptor_positive)
-
-# Uncomment the `View()` command to see the entire object
-# View(hormone_receptor_positive)
-
-```
-
-Notice the values for her2_status in `hormone_receptor_positive`. 
-
-
-Finally, try adding additional features to your object `hormone_receptor_positive` following what we did for the object `tnbc` we created.
-
-
-```{r eval = FALSE}
-
-
-
-```
-
-
-
-### BONUS: Practice 3
-
-There are hundreds of lymph nodes throughout the body. Lymph nodes are part of the lymphatic system which, in turn, is part of the immune system. Lymph nodes are little bean-shaped structures that contain immune cells that help fight infection. They’re connected by a system of lymph vessels that carry fluid throughout your body. 
-
-Cancer spreads when cancer cells break away from the primary tumor. In breast cancer, these cells are most likely to reach the lymph nodes closest to the affected breast.
-
-Breast cancer has four stages. When lymph nodes are involved, it’s at least stage 2. Metastatic breast cancer is stage 4.
-
-There are some samples where `lymph_node_examined_count` is "[Not Available]".
-Let's remove those.
-
-```{r}
-
-LN_counted<-brca_clin_df[((brca_clin_df$lymph_node_examined_count)!="[Not Available]"),]
-
-range(as.numeric(LN_counted$lymph_node_examined_count))
-
-
-```
-
-
-What percentage of samples have information on lymph node count?
-
-```{r}
-
-nrow(LN_counted)/nrow(brca_clin_df) * 100
-
-```
-
-89% of the samples have associated lymph node data.
-
-Let's get a sense of how many lymph nodes were examined in each sample:
-
-```{r}
-
-hist(as.numeric(LN_counted$lymph_node_examined_count),
-     xlab="Number of lymph nodes examined",
-     main="Lymph nodes in 88% of patient samples were tested",
-     breaks=20)
-
-```
-
-If you've come this far, your knowledge of R is impressive! **Congratulations!!**
-
+In future sessions, we will be introduced to the **gene expression data for these patients**. 
 
 

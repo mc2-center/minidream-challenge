@@ -1,0 +1,527 @@
+---
+title: "Motor-clutch model and Cell Migration"
+author: "Jay Hou and Brian Castle"
+date: "7/14/2022"
+output:
+  pdf_document: default
+  html_document: default
+  html_notebook: default
+---
+
+
+## Preliminaries
+
+```{r setup, include=FALSE, message = FALSE}
+
+library(knitr)
+knitr::opts_chunk$set(echo = TRUE)
+
+library(imager)  # We are loading this package so we may look at images.
+
+knitr::opts_chunk$set(echo = TRUE)
+img_dir <- "/home/shared/data/img"
+```
+
+### The goal of activity
+
+The goal of this activity is to computationally model a cellular behavior staring from physical and chemical principles. In this activity, we'll simulate a **motor-clutch system** for cell traction dynamics as described by Chan & Odde, Science, 2008.
+
+### Cancer cell migration and metastasis
+Cancer progression involves the dysregulation of cell division and cell migration. If malignant cells were capable only of proliferating and not migrating, then the resulting tumor would remain a local disease. Malignant tumors are so deadly because hyper-proliferative cells migrate away from the tumor mass and invade the surrounding tissue, often metastasizing to distant organs. 
+Thus, *cell migration becomes a key driver of progression*. 
+```{r}
+knitr::include_graphics(file.path(img_dir, "glioblastoma.png"))
+```
+
+
+### Mechanisms of cell migration
+
+#cell migration on 2D substrate
+```{r}
+knitr::include_graphics(file.path(img_dir, "migration.gif"))
+```
+
+#F-actin retrograde flow
+```{r}
+knitr::include_graphics(file.path(img_dir, "F-actin_flow.gif"))
+```
+
+#F-actin flow and traction force
+```{r}
+knitr::include_graphics(file.path(img_dir, "load_fail.gif"))
+```
+#cell migration mechanism
+```{r}
+knitr::include_graphics(file.path(img_dir, "migration_mechanism.png"))
+```
+In a typical cell migration cycle, the first step is the extension of a cell protrusion at the leading edge driven by **actin polymerization** into self-assembled actin filaments (**F-actin**). F-actin undergoes retrograde flow driven by **myosin II (motor)**-mediated contraction, leading to protrusion retraction. At the same time, F-actin binds and stretches cell adhesion molecules **clutch** linking to the extracellular environment. The adhesion proteins can form focal adhesions that allow the cell to transmit traction forces onto compliant substrates. This system is known as the motor-clutch mechanism and is widely-used to describe cell migration (Mitchison & Kirschner, Neuron, 1988, Lauffenburger & Horwitz, Cell, 1996). Beyond single protrusions, the cell nucleates multiple protrusions via F-actin polymerization, each of which can be modeled as a motor-clutch system, with traction forces balancing across the different protrusions. Stochastic perturbations to the force balance due to adhesion bond rupture enable larger scale cell movements and can define the front and the rear of the cell (Vicente-Manzanares et al., Nat Rev Mol Cell Bio, 2009, Gardel et al., Ann Rev Cell and Dev Bio, 2010).
+
+### stochastic modeling of clutch dynamics
+
+# probability equation for chemical reaction
+
+Clutch binding is a chemical reaction and can be simulated.
+
+For a single clutch, the reaction scheme is
+```{r}
+knitr::include_graphics(file.path(img_dir, "eq_reaction.png"))
+```
+where A is the unbound clutch, B is bound clutch.
+
+According to the mas action law,
+```{r}
+knitr::include_graphics(file.path(img_dir, "eq_mass_action.png"))
+```
+, and the results of the differential equation is
+```{r}
+knitr::include_graphics(file.path(img_dir, "eq_reaction_B.png"))
+```
+We can also consider a Markov process which is any stochastic process without memory (Keener, Mathematical Physiology, 2009),
+```{r}
+knitr::include_graphics(file.path(img_dir, "eq_probability_Markov.png"))
+```
+For the chemical reaction above, we can write the probability equation,
+```{r}
+knitr::include_graphics(file.path(img_dir, "eq_probability.png"))
+```
+, it can be written in a differential equation,
+```{r}
+knitr::include_graphics(file.path(img_dir, "eq_probability_DE.png"))
+```
+, and we can derive a similar exponential function,
+```{r}
+knitr::include_graphics(file.path(img_dir, "eq_probability_B.png"))
+```
+In a numerical simulation, then the random number is smaller than P(B), the reaction is moving forward,
+```{r}
+knitr::include_graphics(file.path(img_dir, "eq_probability_RN.png"))
+```
+
+# Exercise 1: clutch dynamics
+
+With multiple clutches, we use 2D arrays to keep track of the individual states, so now `clutchState`, `csArray` and `timeArray` are matrices. 
+
+For each time step:
+1. Check the current state of the clutch, bound or unbound.
+2. Determine the probability the clutch changes state. 
+3. Execute based on random number generation.
+4. Record the elapsed time.
+5. Record the clutch state at the current time point.
+
+```{r}
+# Assign parameters
+clutchNum <- 75     
+kon <- 1       # s^-1
+koff <- 0.1    # s^-1
+
+timeStep <- 0.01      # seconds
+numSteps <- 1000;
+
+# main code
+
+clutchState <- matrix(0,clutchNum,1)     # 0 for unbound, 1 for bound
+csArray <- matrix(0,numSteps,1)          # clutch bound array
+timeArray <- matrix(0,numSteps,1)        # elapsed time
+
+for (i in 2:numSteps) {                  # Define simulation space
+  for (j in 1:clutchNum) {               # Loop through each clutch
+    if (clutchState[j] == 0) {             # If clutch is unbound
+      pBind = 1 -exp(-kon*timeStep)   # Equation 2
+      temp <- runif(1)                     # Random number generation
+      if (temp <= pBind) {                 # Does event occur?
+        clutchState[j] <- 1 }              # If so, clutch is bound
+    }
+    if (clutchState[j] == 1) {               # If clutch is bound
+      pUnbind <- 1 -exp(-koff*timeStep) # Equation 2
+      temp <- runif(1)                       # Random number generation
+      if (temp <= pUnbind) {                 # Does event occur?
+        clutchState[j] <- 0 }                # If so, clutch is unbound
+    }
+  }
+  timeArray[i] <- timeArray[i-1]+timeStep  # Record current time
+  csArray[i]<-sum(clutchState)             # record number of bound clutches
+}
+
+plot(timeArray,csArray,type="l", ylim=c(0,max(csArray)),xlab="Time (sec)",ylab="Number of bound clutches",col="blue")
+
+clutchbCalc = (kon*clutchNum/(kon+koff))-(kon*clutchNum/(kon+koff))*exp(-1*(kon+koff)*timeArray)
+lines(timeArray, clutchbCalc, col="red",lty=1)
+```
+
+**Challenge Questions**
+What do you observe? 
+
+
+What is the equilibrium bound clutch number (nc_bound_final)? 
+
+What is the half time of this reaction (nc_bound(time_half) = 0.5*nc_bound_final)?
+
+```{r}
+# Challenge Question
+# nc_bound_final <-
+# time_half<-
+```
+
+**bonus**
+How will kon, koff, clutchNum affect simulation results?
+
+
+Why stochastic simulation results fluctuate with time? What are the benefits from this behavior?
+
+
+What is the biological behavior represented by this exercise?
+
+
+### F-actin binding and stretching clutches
+# F-actin flow stretches clutch proteins
+With a constant F-actin flow, when F-actin binds to clutches, F-actin can stretch the clutches and generate clutch forces. For small extensions, the force-extension relationship of macromolecules and proteins is reasonably approximated by a spring (Mark, Polymers, 2007, Haber and Wirtz, Rev Sci Instr, 2000)
+
+```{r}
+knitr::include_graphics(file.path(img_dir, "clutch_force.png"))
+```
+, and it exhibits a linear relationship under lower load. We can use the simple spring to describe the relation,
+```{r}
+knitr::include_graphics(file.path(img_dir, "clutch_eq.png"))
+```
+
+In statistical mechanics, Boltzmann’s law states that if a particle or system is in thermal equilibrium, then the probability of being in state i that has energy Ui is given by, 
+
+```{r}
+knitr::include_graphics(file.path(img_dir, "eq_boltzmann.png"))
+```
+Here we use the similar descripsion for koff,
+```{r}
+knitr::include_graphics(file.path(img_dir, "eq_koff.png"))
+```
+
+# Exercise 2: F-actin flow stretching clutches
+
+Now that we have code for simulating the dynamics of multiple clutches, we can bind clutches to F-actin and stretch the clutches due to F-actin flow.
+
+**simulation**
+For each time step, 
+
+1. stretch bond clutches using constant F-actin flow
+2. calculate clutch forces
+3. calculate clutch bond and unbound probability
+4. bond and unbond the clutches
+
+Now simulate!
+```{r}
+# parameters
+clutchNum <- 75     
+kon <- 1       # s^-1
+koff <- 0.1    # s^-1
+clutchK <- 5       # pN/nm
+bondForce <- 2      # pN
+actinFlow <- 120
+
+timeStep = 0.01      # seconds
+numSteps = 100;
+
+# Initialize
+clutchState <- matrix(0,clutchNum,1)
+clutchdx <- matrix(0,clutchNum,1)
+clutchF <- matrix(0,clutchNum,1)
+moduleF <- 0
+timeArray <- matrix(0,numSteps,1)
+csArray <- matrix(0,numSteps,1)
+FArray <- matrix(0,numSteps,1)
+
+# The first part of this chunk is the same as before
+for (i in 2:numSteps) {
+
+    for (j in 1:clutchNum) {
+    
+    if (clutchState[j] == 0) {
+      pBind = 1 -exp(-kon*timeStep)
+      temp <- runif(1)
+      if (temp <= pBind) {
+        clutchState[j] <- 1 }
+    }
+    if (clutchState[j] == 1) {
+      pUnbind <- 1 -exp(-koff*exp(clutchF[j]/bondForce)*timeStep)
+      temp <- runif(1)
+      if (temp <= pUnbind) {
+        clutchState[j] <- 0 
+        clutchdx[j] <- 0;
+      }
+    }
+    if (clutchState[j] == 1) {   # if clutch is bound
+      clutchdx[j] <- clutchdx[j] + actinFlow*timeStep   # clutch stretched by flow
+    }
+  }
+  
+  engNum = sum(clutchState)
+
+  moduleF = 0
+  for (j in 1:clutchNum) {
+      clutchF[j] = clutchK*abs(clutchdx[j])
+      moduleF = moduleF + clutchF[j]
+  }
+  
+  timeArray[i] = timeArray[i-1] + timeStep
+  csArray[i]=engNum     
+  FArray[i]=moduleF
+}
+
+plot(timeArray,csArray,type="l",xlim=c(0,max(timeArray)), ylim=c(0,max(csArray)+2),xlab="Time (sec)",ylab="Number of bound clutches",col="blue")
+
+plot(timeArray,FArray,type="l",xlim=c(0,max(timeArray)), ylim=c(0,max(FArray)+2),xlab="Time (sec)",ylab="module force",col="blue")
+
+```
+
+
+**Challenge Questions**
+What do you observe?
+
+
+What is the approximate frequency for clutches to unbound (unbound_freq)? 
+
+
+What is the mean module force (mforce_mean)? 
+
+
+```{r}
+# Challenge Question
+#unbound_freq <-
+#mforce_mean<-
+```
+
+**bonus**
+How will kon, koff, clutchNum, clutchK, actinFlow affect simulation results?
+
+
+Is module force = clutch bound number * clutchK? If not, why?
+
+
+What is the biological behavior represetned by this exercise?
+
+
+
+### clutchs bind on deformable substrate
+
+# governing equation
+Now we can apply total clutch forces to a deformable substrate, and the deformation of substrate can affect system dynamics.
+
+We need to track the clutch position
+```{r}
+knitr::include_graphics(file.path(img_dir, "clutch_x.png"))
+```
+
+Based on the force balance, we can derive the substrate position,
+```{r}
+knitr::include_graphics(file.path(img_dir, "clutch_xsub.png"))
+```
+
+Then the net stretch of the clutch is
+```{r}
+knitr::include_graphics(file.path(img_dir, "clutch_stretch.png"))
+```
+
+
+# Exercise 3: substrate is deformable
+For each time step, 
+
+1. stretch bond clutches using constant F-actin flow
+2. calculate clutch forces
+3. calculate clutch bond and unbound probability
+4. bond and unbond the clutches
+
+Now simulate!
+```{r}
+# parameters
+clutchNum <- 75     
+kon <- 1       # s^-1
+koff <- 0.1    # s^-1
+clutchK <- 5       # pN/nm
+bondForce <- 2      # pN
+subK <- 0.05          # pN/m
+actinFlow <- 120
+
+timeStep = 0.01      # seconds
+numSteps = 10000;
+
+# Initialize
+clutchState <- matrix(0,clutchNum,1)
+clutchdx <- matrix(0,clutchNum,1)
+clutchx <- matrix(0,clutchNum,1)
+clutchF <- matrix(0,clutchNum,1)
+moduleF <- 0
+subx <- 0
+csArray <- matrix(0,numSteps,1)
+timeArray <- matrix(0,numSteps,1)
+FArray <- matrix(0,numSteps,1)
+FlowArray <- matrix(0,numSteps,1)
+SubxArray <- matrix(0,numSteps,1)
+
+# The first part of this chunk is the same as before
+for (i in 2:numSteps) {
+
+    for (j in 1:clutchNum) {
+    
+    if (clutchState[j] == 0) {
+      pBind = 1 -exp(-kon*timeStep)
+      temp <- runif(1)
+      if (temp <= pBind) {
+        clutchState[j] <- 1 }
+    }
+    if (clutchState[j] == 1) {
+      pUnbind <- 1 -exp(-koff*exp(clutchF[j]/bondForce)*timeStep)
+      temp <- runif(1)
+      if (temp <= pUnbind) {
+        clutchState[j] <- 0 
+        clutchdx[j] <- 0;
+      }
+    }
+    if (clutchState[j] == 1) {   # if clutch is bound
+      clutchdx[j] <- clutchdx[j] + actinFlow*timeStep   # clutch stretched by flow
+    }
+    
+    clutchx[j] = clutchdx[j] + subx
+  }
+  
+  subx = 0
+  for (j in 1:clutchNum) {
+    if (clutchState[j] == 1) {
+      subx = subx + clutchx[j]
+    }
+  }
+  engNum = sum(clutchState)
+
+  subx = subx*clutchK/(subK+clutchK*engNum)
+  
+  moduleF = 0
+  for (j in 1:clutchNum) {
+    if (clutchState[j] == 1) {
+      clutchdx[j] = clutchx[j] - subx
+    }
+    if (clutchState[j] == 0) {
+      clutchdx[j] = 0
+    }
+      clutchF[j] = clutchK*abs(clutchdx[j])
+      moduleF = moduleF + clutchF[j]
+  }
+  
+  timeArray[i] = timeArray[i-1] + timeStep
+  csArray[i]=engNum     
+  FArray[i]=moduleF
+  SubxArray[i]=subx
+}
+
+plot(timeArray,csArray,type="l",xlim=c(0,max(timeArray)), ylim=c(0,max(csArray)+2),xlab="Time (sec)",ylab="Number of bound clutches",col="blue")
+
+plot(timeArray,FArray,type="l",xlim=c(0,max(timeArray)), ylim=c(0,max(FArray)+2),xlab="Time (sec)",ylab="module force",col="blue")
+
+plot(timeArray,SubxArray,type="l",xlim=c(0,max(timeArray)), ylim=c(0,max(SubxArray)+2),xlab="Time (sec)",ylab="substrate position",col="blue")
+
+afreq = 8/94
+ameanF = mean(FArray)
+
+```
+
+This load-and-fail behavior was observed in the experiment.
+```{r}
+knitr::include_graphics(file.path(img_dir, "load_fail.gif"))
+```
+
+, and its measured deformation is similar to simulation.
+```{r}
+knitr::include_graphics(file.path(img_dir, "exp_load_fail_deformation.png"))
+```
+
+
+**Challenge Questions**
+What do you observe?
+
+
+What is the approximate frequency for clutches to unbound (unbound_freq_deform)?
+
+
+What is the mean module force (mforce_mean_deform)? 
+
+
+Is substrate deformation = module force * subK? (Equation_SubDeform_MForce = yes or no) 
+
+
+```{r}
+# Challenge Question
+#unbound_freq_deform <-
+#mforce_mean_deform<-
+#Equation_SubDeform_MForce<-
+```
+
+**bonus**
+How will subK affect simulation results?
+
+
+When subK becomes very large, will the results become similar to Exercise 2?
+
+
+What is the biological behavior represented by this exercise?
+
+
+
+### stochastic modeling of motor-clutch mechanism
+```{r}
+knitr::include_graphics(file.path(img_dir, "motor_clutch_model.png"))
+```
+
+Stochastic simulations of the motor-clutch model (Chan & Odde, Science, 2008) has been developed and applied to predict the cell traction force, cell morphology, and F-actin flow at different substrate conditions. 
+  Module force Fj is summation of individual clutch force Fc,i, which is a function of the clutch spring constant kc and clutch displacements dxc,i. Clutches bound and unbound to F-actin based on the clutch binding rate kon  and unbinding rate koff  as a function of the minimum unbinding rate koff, motor force Fm  and Fj, and Fm  equals to the single motor force Fm multiplying the motor number nm. Bound clutches were displaced at the rate vactin as a function of the maximum rate vactin*, nm , Fm , and F_j.
+  Monte Carlo simulations were conducted using a direct Gillespie Stochastic Simulation Algorithm, the event was executed based on accumulated event rates, including kon, koff, and the next time step t_step was determined based on the total event rates and a random number RN.
+  the simulation results were consistent with experimental results for neurons contracting on polyacrylamide gel.
+  
+```{r}
+knitr::include_graphics(file.path(img_dir, "motor_clutch_results.png"))
+```
+
+
+
+### stochastic modeling of cell migration
+```{r}
+knitr::include_graphics(file.path(img_dir, "CMS.png"))
+```
+
+By imposing a force balance between the protrusions, Bangasser, Nat Commun, 2017 successfully developed a physics-based cell migration simulator (CMS) to simulate the optimal substrate stiffness for the maximum motility of U251 glioma cells on PA gels, and subsequent work predicted the optimal cell motility with different focal adhesion sizes and distributions (Hou, Cytoskeleton, 2019), simulated the higher cancer cell motility on viscoelastic gels with faster stress relaxing (Adebowale, Gong, Hou, Nat Mat, 2021), predicted the negative durotaxis for U251 glioma cells on PA gels with stiffness gradients (Isomursu', Park', Hou', Nat Mat, 2022), and simulated the cyclic cell migration speed within 1D channels for melanoma cells (Lee, Hou, Cell Systems, 2022). By changing parameter values, the CMS can capture the differential migration features in different cell types and under drug treatments, which may link to cell transcriptomes.  Therefore, the CMS provides a consistent mechanical framework which can be used to interpret and synthesize cell migration and force measurements across glioblastoma subtypes in order to predict cell migration based on glioblastoma cell transcriptomes.
+
+The CMS comprises multiple protrusions or modules which were nucleated randomly based on the rate kmod  which is a function of the maximum rate km', G-actin or free actin monomers, and the total actin amount (AT). Protrusions were elongated based on the polymerization rate vpoly as a function of the maximum rate vpoly' , AG, and AT. Protrusions were capped randomly at the rate kcap  eliminating further polymerization and removed if the protrusion length is shorter than the minimum length lmin. The cell position was determined by the force balance between protrusion forces Fj for nmod  modules and the cell body force Fcell.  Fcell  and Fj  are summation of individual clutch force Fc,i, which is a function of the clutch spring constant κc  and clutch displacements dxc. The rest of equations follow the motor-clutch model.
+	Monte Carlo simulations were conducted using a direct Gillespie Stochastic Simulation Algorithm, the event was executed based on accumulated event rates, including kon, koff, kmod, and kcap, and the next time step tstep  was determined based on the total event rates and a random number RN. The C++ version of the CMS (Hou, Cytoskeleton, 2019) was used to conduct the simulations in the Mesabi computer cluster at the Minnesota Supercomputing Institute (MSI).
+
+  the simulation results were consistent with experimental results for U251 glioma cells on the polyacrylamide gel
+```{r}
+knitr::include_graphics(file.path(img_dir, "CMS_result.png"))
+```
+
+
+
+### Submitting the prediction
+
+You're now ready to submit the prediction. Just run the chunk below, a file with your prediction will be uploaded to Synapse and submitted to the challenge. You'll be able to see the results of your prediction on the mini-DREAM scoreboards, with the submission ID that gets printed below.
+
+```{r, eval=FALSE}
+# Load function to submitting answers to the leaderboard.
+scripts_dir <- "/home/shared/R"
+source(file.path(scripts_dir, "submission_helpers.R"))
+
+# Log into Synapse
+synLoginSecure()
+
+# Submit answers
+submission <- submit_module_answers(module = 5)
+```
+
+
+
+
+### the end
+
+Congrats — you’ve reached the end of the module!
+
+**bonus**
+Does this module help you to understand better about cell migration?
+
+
+
+
+

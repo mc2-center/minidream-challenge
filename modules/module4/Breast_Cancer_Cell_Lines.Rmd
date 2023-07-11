@@ -1,0 +1,444 @@
+---
+title: 'Breast Cancer Cell Lines'
+author: "Diana Murray"
+date: "June 21, 2023"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: "spacelab"
+---
+
+## About this activity
+
+Until now, we have worked with expression data and clinical information from breast cancer patient samples (TCGA). We found patterns in genes and in samples by color-coding the expression data in a heat map and then clustering the samples and the genes in the heat map based on how similar they are to each other.
+
+In this module, we will work with data from experiments with **human cancer cell lines** from the Physical Sciences in Oncology Cell Line Characterization Study, which includes imaging- and microscopy-based measurements of physical properties of the cells, such as morphology (shape) and motility (movement). We will examine:
+
+* the expression levels of genes, and 
+* how fast the cells move.
+
+---
+
+## Loading the data
+
+We will create an object that holds the name of the directory where the TCGA data resides. This is good R coding practice because we can apply all we do below to a data set in a different directory by changing a single variable (`data_dir`).
+
+```{r include=FALSE}
+
+# Where the data resides
+data_dir <- "/home/shared/data"    
+
+```
+
+
+`.RData` files are binary files (i.e., not human readable) that hold R objects, such as data frames. 
+
+`PSON.RData` contains gene expression and cell speed data from the Physical Sciences in Oncology project.
+
+```{r}
+# The objects will also appear in the "Environment" tab.
+load(file.path(data_dir, "PSON_data.RData"),verbose=TRUE) 
+
+
+```
+
+
+---
+
+## Expression data
+
+The **Environment** tab gives us basic information on the object that was loaded.
+
+Explore the data using the functions we learned previously.
+
+* `dim()` tells us the dimensions (# row, # columns) of the objects.
+* `head()` shows us the top several rows of the objects.
+* *indexing* allows us to look at the rows and columns we choose.
+
+```{r}
+
+# How many rows and columns in pson_expr_mat
+
+dim(pson_expr_mat)
+
+```
+
+What does the data look like?
+
+```{r}
+
+# An example of indexing.
+
+pson_expr_mat[1:5,1:5]
+
+```
+
+Rows are named with the genes whose expression values were measured. 
+Columns are named with identifiers for the experiments performed.   
+
+---
+
+### Transcripts per Million
+
+There are many ways of summarizing mRNA expression levels. The mRNA expression values in our matrix have units of TPM or **transcripts per million**. Each column (experiment) of the expression data matrix should add up to 1,000,000 if all genes were detected. 
+
+
+```{r}
+# Add up the values in each column
+colSums(pson_expr_mat)  
+
+```
+
+Most of the columns don’t add up to a million, but the sums are close! The original data table included many more rows than the 18,682 we see here, but in preprocessing the data, the genes that do not code for proteins were removed.
+
+
+---
+
+### Log transformation
+
+As we did with the TCGA breast cancer patient expression data, we'll log-transform the PSON expression data to compress the range of the values.  We use the log base 2 function `log2()` and add 1 to all values to avoid taking the log of 0 which is undefined.
+
+```{r}
+# The log transformation
+pson_log_mat <- log2(1 + pson_expr_mat)
+
+# Indexing to see some values
+pson_log_mat[1:5, 1:5]
+
+```
+
+
+---
+
+## Motility data
+
+The object `cell_speeds_df` contains data that is completely new to us.
+
+
+```{r,eval=FALSE}
+# How many rows and columns?
+dim(cell_speeds_df)
+
+```
+
+
+Since it is a relatively small data frame, you can look at the whole table.
+
+```{r eval = FALSE}
+# The data frame as a table will appear in a new tab
+View(cell_speeds_df)
+
+```
+
+
+Let's get the column names of this data frame:
+
+```{r}
+colnames(cell_speeds_df)
+
+```
+
++ "sample" is the name of the experiment
++ "cellLine" is the human cancer cell line name
++ "diagnosis" is the cancer type that the cell line models
++ "experimentalCondition" gives the substrate on which the cells were grown
++ "summary_metric" tells us that cell speed in microns per hour was measured
++ "average_value" is the average cell speed for that experiment
++ "total_number_of_cells_tracked" tells us how many cells were watch in the imaging microscope
+
+
+---
+
+### Cancer cell lines
+
+What cell lines (`cellLine`) were examined?  
+
+```{r}
+# The function `unique()` returns values with duplicates removed
+unique(cell_speeds_df$cellLine)
+
+```
+
+
+What cancer types do the cell lines represent (`diagnosis`)?
+
+```{r}
+# Find each cell line and the type of cancer it models
+unique(cell_speeds_df[,c(2,3)])
+
+```
+
+We are interested in the two breast cancer cell lines: 
+
++ T47-D
++ MDA-MB-231
+
+
+--- 
+
+### Experimental Conditions
+
+Each experiment was conducted under different conditions. 
+
+"experimentalCondition" gives the type of substrate on which cell speed was measured.
+
+```{r}
+unique(cell_speeds_df$experimentalCondition)
+
+```
+
+We will use the data for the experimental condition "HyaluronicAcid Collagen".
+
+---
+
+### Hyaluronic acid and collagen
+
+Hyaluronic acid, collagen, and fibronectin are all common components of the **extracellular matrix** for biological cells.
+
+```{r}
+# To load an imager, we read in the imager package
+library(imager)
+substr_img<-load.image(file.path(data_dir,"substrate.JPG"))
+
+par(mar=c(0.5,0.5,0.5,0.5))
+plot(substr_img,axes=FALSE)
+
+```
+
+The substrates considered are reasonable models for the cellular milieu. Let's look in more detail at one condition, **HyaluronicAcid Collagen**.
+
+```{r}
+# We are using a logical statement to find only the rows of interest
+cell_speeds_df[cell_speeds_df$experimentalCondition == "HyaluronicAcid Collagen",]
+
+```
+
+
+Nine experiments were done on the "HyaluronicAcid Collagen" substrate.  
+
+Two of the experiments were done with the breast cancer cell lines we are interested in.
+
+
+```{r}
+
+hyal_coll_brca_df <- cell_speeds_df[
+                     cell_speeds_df$experimentalCondition == "HyaluronicAcid Collagen"
+                     &
+                     cell_speeds_df$diagnosis == "Breast Cancer",]
+head(hyal_coll_brca_df)
+
+```
+
+Scroll through the columns of the table. The `summary_metric` is cell speed in microns per hour. In the column `average_value`, we see that one cell line (MDA-MB-231) moves twice as fast as the other cell line (T-47D) on the "HyaluronicAcid Collagen" substrate:  36 u/hr versus 16 u/hr.   
+
+We'll call MDA-MB-231 the **fast** cell line and T-47D the **slow** cell line. MDA-MB-231 is a model for highly aggressive, invasive triple-negative breast cancer (TNBC). T-47D is a model for ductal carcinoma in situ which is non-invasive.
+
+Note that the `sample` values, i.e. the names of our experiments, are 
+
+* mRNA_R56
+* mRNA_R63
+
+
+---
+
+## Expression and motility
+
+Even though the expression matrix contains information from 63 experiments, we want the expression data from only two the experiments, mRNA_R56 and mRNA_R63, with breast cancer cell lines and the HyaluronicAcic Collagen substrate.
+
+Let's extract these two experiments from the expression matrix.
+
+```{r}
+# Make a matrix with the expression data for only these two expriments
+hyal_coll_brca_log_mat <- pson_log_mat[, c("mRNA_R56","mRNA_R63")]
+
+# Rename the experiments (columnas) according to the relative speeds of the cells
+colnames(hyal_coll_brca_log_mat) <- c("slow","fast")
+
+# Look at the first 10 rows
+hyal_coll_brca_log_mat[1:10,]
+
+```
+
+
+Some of the genes have a similar expression level in both cell lines, but some genes are quite different.
+
+Genes that have very different levels in the "fast" versus "slow" cell lines may be informative about why the two cell lines - one a model for aggressive cancer (MDA-MB-231) and the other a model for noninvasive cancer (T-47D) - behave differently.  
+
+By subtracting the expression in the "slow" cell line from the expression in the fast cell line, we create a **differential gene expression profile**, or DGE profile. 
+
+---
+
+### Differential Gene Expression
+
+We'll add a column to our matrix that corresponds to the differential gene expression (dge) and sort the matrix according to dge.
+
+```{r}
+# Subtract the first and second columns
+dge <- hyal_coll_brca_log_mat[,2] - hyal_coll_brca_log_mat[,1]
+
+# Add `dge` as a column to our previous matrix 
+dge_mat <- cbind(hyal_coll_brca_log_mat,dge)
+
+# Sort the differential gene expression values from high to low
+order_dge <- order(dge, decreasing = TRUE)
+
+# Re-order the rows of the matrices so we can easily see which
+# genes are most expressed in "fast" versus "slow"
+order_dge_mat <- dge_mat[order_dge,]
+
+# Look at the first 10 rows
+head(order_dge_mat, 10)
+
+```
+
+
+Remember, that the values we are working with are log-transformed values.  For the gene VIM, a dge value of 9.72 means that the level of VIM mRNA expression is higher in the fast cell line than the slow cell line by a factor of 2 raised to the power 9.72 (or 2^9.72) which is 843.  
+
+
+We can also look at the bottom of the matrix to see which genes are more highly expressed in the "slow" cell line versus the "fast" cell line.
+
+
+```{r}
+# last ten rows
+tail(order_dge_mat, 10)
+
+```
+
+
+There are many genes that are preferrentially expressed in one cell line versus the other.  
+
+
+```{r}
+
+# Create a histogram of the differential gene expression values
+hist(order_dge_mat[,3], xlab = "Differential gene expression, dge",
+                  main = "Histogram of dge values")
+
+```
+
+Most of the dge values are around zero, so most genes have very similar expression in the "fast" and "slow" cell lines.
+
+The genes with large differential expression (those in the tails of the histogram) are the most interesting to consider because they may provide us with clues as to why the cell lines behave so differently.
+
+
+---
+
+### Vimentin and keratin in motility
+
+VIM, which codes for the protein vimentin, is at the very top of the expression matrix ranked by `dge`, and KRT23, which codes for the protein keratin, is near the bottom. 
+
+This image comes from the paper, ["Vimentin induces changes in cell shape, motility, and adhesion during the epithelial to mesenchymal transition"](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2874471). 
+
+Cells that express vimentin filaments (VIF) but NOT keratin filaments (KIF) are elongated in shape and move more freely (more motile, panel A), whereas cells with keratin filaments (KIF) and NOT vimentin filaments (VIF) are round and undergo fewer changes in morphology (shape) and position (panel B).
+
+
+```{r}
+VIF_KIF_img<-load.image(file.path(data_dir,"VIF_KIF.JPG"))
+
+plot(VIF_KIF_img,axes=FALSE)
+```
+
+The cells in A are elongated and move more quickly than the cells in B. A main difference between the cells is the different expression levels of VIM versus KRT23. We observe that VIM is much more highly expressed in the aggressive ("fast") cell line and KRT23 is much more highly expressed in the noninvasive ("slow") cell line.
+
+
+---
+
+## Challenge Question
+
+Lists of differentially expressed genes are difficult to interpret on a gene-by-gene basis. **Enrichment analysis** is a method to find biological functions associated with a **set of genes** we have reason to believe are related.
+
+For example, we suspect that the genes with highest relative expression in the fast cell line may have something to do with cell movement.  How can we check this?
+
+**Part 1**
+Create an object with the top 50 genes in `order_dge_mat`. Use the function `rownames()` to get the gene names. These genes will be those with high expression in the fast cell line and low expression in the slow cell line.
+
+```{r eval=FALSE}
+# Finish the code.  Replace ffff with a function to get the genes you want
+# Input the correct indexing in the square brackets
+my_50_genes <- ffff(order_dge_mat)[   ]
+
+head(my_50_genes)
+
+length(my_50_genes)
+```
+
+**Part 2**
+Write the genes in `my_50_genes` to a file using the function `write()`.
+
+```{r eval=FALSE}
+
+#Finish the code to write the genes to a file 
+
+write(my_50_genes, "50genes.txt"  )
+
+
+```
+
+**Part 3**
+Click on the file to open it, and copy the list of genes.
+
+Paste the list in the **GO Enrichment Analysis** panel at the Gene Ontology website, http://geneontology.org/, and click "Launch."
+
+The results page will give you a list of **biological processes** that your set of genes may participate in. 
+
+The **Gene Ontology (GO)** knowledgebase is the world’s largest source of information on the functions of genes. Genes are annotated with biological functions (GO terms) by experts.
+
+An enrichment analysis finds which GO terms are over-represented in annotations for your gene set. The **Fold Enrichment** is the percentage of genes in your list belonging to a pathway or process divided by the corresponding percentage of genes selected randomly. 
+
+What GO terms related to migration or motility do you find for your set of genes?  
+
+Assign two biological process terms you think are interesting along with their **Fold Enrichment** values:
+
+```{r,eval=FALSE}
+# place your terms between the quotation marks
+# include the fold enrichment values
+
+term1 <- "  "
+FE1<- N1
+
+term2 <- "  "
+FE2<- N2
+  
+
+```
+
+
+ 
+## Bonus Challenge
+
+Insert code chunks below to do the same for genes at the bottom of `order_dge_mat`. 
+
+
+
+### Submit your work
+
+```{r, eval=FALSE}
+# Load function to submitting answers to the leaderboard.
+scripts_dir <- "/home/shared/R"
+source(file.path(scripts_dir, "submission_helpers.R"))
+
+# Log into Synapse
+synLoginSecure()
+
+# Submit answers
+submission <- submit_module_answers(module = 4)
+```
+
+
+---
+
+### Create your report
+
+Click the "Knit" button at the top of this window and select "Knit to html."
+
+---
+
+## Congratulations 
+
+In four activities we have covered a lot of ground. We analyzed clinical and gene expression data from over 1,000 patients in the the Cancer Genome Atlas Breast Cancer cohort.  We also analyzed gene expression and cell speed data from human cancer cell lines obtained in the Physical Sciences and Oncology cell line study. 
+
+The MDA-MB-231 and T-47D cell lines are widely used research models for human breast cancer. MDA-MB-231 cells travel twice as quickly than T-47D cells on a substrate model for the extracellular matrix. We found that enrichment analysis of differentially expressed genes suggests that processes related to cell migration and motility may underlie the difference in the cells' behaviors.  We will learn how to simulate cell migration with equations describing physical forces acting on cellular components in our sessions with Jay!
+
+
+

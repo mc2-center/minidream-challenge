@@ -1,0 +1,363 @@
+---
+title: "Intro To R and RStudio"
+author: 
+  - "Author: Pierrette Lo"
+  - "Reviewer: Verena Chung"
+  - "Adapted from 2022 miniDREAM materials by Gianna Jordan"
+date: "Presentation date: 2023-06-15"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 2
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+data_dir <- "/home/shared/data"
+scripts_dir <- "/home/shared/R"
+source(file.path(scripts_dir, "submission_helpers.R"))
+```
+
+---
+
+# Welcome to the miniDREAM - Intro to R session!
+
+## Overview
+
+In this notebook, we will cover:
+
+* Basic definitions
+* Updating your password
+* The RStudio IDE
+* Programming basics
+* Simple data visualization
+* mini-DREAM Challenge
+
+For today's activity, let's start by opening https://minidream.synapse.org/ in your browser and logging in using your Synapse username and the default password ("mini2023").  
+  
+For the rest of the activity, I will share my screen and you can watch, and I'll let you know when to switch over to your RStudio tab for the interactive portions. (Ideally, if you have a big enough monitor, you can have Zoom and RStudio open side-by-side.) 
+
+---
+
+## Basic definitions
+  
+#### R:  
+  
+An open-source programming language used for working with data (statistical analysis, data visualization, reporting analysis results, etc.). It's popular among researchers in biomedical (and other sciences) who need to work with data but don't have a computer science background.  
+  
+[Here](https://cloud.rstudio.com/resources/webinars/a-gentle-introduction-to-tidy-statistics-in-r/) is a great video that provides a friendly introduction to what you can do with R. If you're interested in exploring further, there are many resources linked in the "Learning R" section of [this page](https://www.synapse.org/#!Synapse:syn51197448/wiki/621417) on the miniDREAM website.  
+
+#### RStudio:
+
+RStudio is an **IDE**, or **Integrated Development Environment** - an application for writing and executing R code that is more visual and user-friendly than just working with a command prompt/terminal.  
+  
+There are many different IDEs that  can be used with R (e.g. VS Code, vim, emacs) but RStudio is by far the most popular. It includes many features to make R programming easier, such as:
+
+* Auto completion prompts
+* Color coding functions or other groups of text
+* Debugging tools
+* Help options for various aspects of the IDE or code
+* Can work with other programming languages such as Python
+
+We are using RStudio in the cloud, but you can also download R and RStudio onto your computer.
+
+#### R Markdown:
+
+This is an R Markdown document - a file format that allows you to write and run code, combine it with text descriptions, add interactivity features, and output it to different formats like PDF or HTML. It's a very useful way to share your analyses and code with others. (An example of this document in HTML format is in the directory `Home > modules > module0 folder` in the Files pane.) 
+  
+The text looks a bit funky in this document because it's written in Markdown language, which will interpret all the symbols (like \# and \*) and replace them with nicely formatted text in the final HTML output.  
+  
+Check out [this gallery](https://rmarkdown.rstudio.com/gallery.html) for some examples of cool things you can do with R Markdown. There's also a newer, more powerful version of R Markdown called Quarto that we won't use in this class, but you can explore it [here](https://quarto.org/). 
+
+#### R Package:
+
+An R package is a collection of functions, scripts, and/or datasets that R users build to share new tools with the community. If you want to do something that can't be done with "base" R, chances are that someone has written a package for it. If not, maybe *you* can write and share it!
+
+---
+
+## Changing Your Password
+
+You may already have followed the password-changing instructions on the [course website](https://www.synapse.org/#!Synapse:syn51197448/wiki/621420). If not, navigate to the `Terminal` tab (in the `Console` pane) and type `passwd` to change your password to sign in to the miniDREAM RStudio environment.  
+
+You should receive prompts to enter your current password, a new password, and then to confirm the new password. As you enter your various passwords **no text will appear, but this is normal** and is similar to how passwords on websites are protected with black dots during entry.
+
+---
+
+## The RStudio Panes
+
+The default setup for RStudio has 4 panes:
+
+* Console / Terminal / Background Jobs
+* Environment / History / Connections / Tutorial
+* Source
+* Files / Plots / Packages / Help / Viewer / Presentation
+
+### Console / Terminal / Background Jobs
+
+In the console, you can execute commands one line at a time. This is really useful for trying out new things or different approaches while taking your time.  
+  
+Below is a "chunk" (yes, that's the official term) of code that instructs R to print a line of text. Chunks are delineated from regular text by 3 backticks (\`) - the text between the backticks is the code. There are two ways to run this code:
+
+1. Copy and paste it into the Console tab, then press Enter.
+2. Because this is an R Markdown document, you can run the code and see the output directly in this document by "running" the chunk (clicking the green arrow button on the right side of the chunk).
+
+```{r}
+
+print("Hello world!")
+
+```
+
+The `Terminal` tab allows you to work in the command line (not R). `Background Jobs` lets you keep track of scripts that are running in the background.
+
+### Environment / History / Connections / Tutorial
+
+Now, let's run the two chunks below, either in the Console or by running each chunk.
+
+```{r eval=FALSE}
+
+month <- 'June'
+
+```
+
+```{r eval=FALSE}
+
+temperature <- 105
+
+```
+
+We just assigned values to the variables `month` and `temperature`. Variables can hold data of different types; in this case `month` holds a string or a type useful for storing characters and text, and `temperature` holds a numerical integer value. There are other data types as well.
+
+You'll notice there was no visible output after running the last two commands, but you should now see the two variables and their values displayed in the `Environment` pane. This pane shows all of the variables that exist currently, and their values. (The environment also contains other data and functions that were specified in the setup chunk at the start of this document.)
+  
+Within the same pane, you can click to the `History` pane to see the history of the commands you have already run. There's also the `Connections` pane, which shows connections you've made to supported external data sources, and the `Tutorial` pane that gives short lessons on things you can do in R.
+
+### Source
+
+Running commands one at a time in the console is useful in certain situations, but with only using the console it can be hard to rerun larger sections of code, hard to remember the steps you took when looking back to the past, and hard to share your code with others. That is where the `Source` pane comes in!  
+  
+We can open a new file by navigating to `File > New File` and then picking a file type. The simplest is `R Script`, which is like a blank slate where you can write all of your code and save it so that it can be stored for later reference and use, or shared with colleagues to rerun.
+
+### Files / Plots / Packages / Help / Viewer / Presentation
+
+The last pane has multiple tabs: `Files` lists the files and folders in your current directory, or the folder that you've navigated to. Any graphs or figures that you generate with code in RStudio are displayed in the `Plots` pane. `Packages` Lists all of the packages that you have installed and their version numbers. The `Help` pane will display more detailed information about R functions and datasets to assist you as you write. The `Viewer` pane is useful for visualizing documents like this R Markdown file. `Presentations` is for using R Markdown or Quarto to create presentations from your code. 
+
+### Customization
+
+There are many settings for RStudio that you can configure to your preference!  
+  
+Lets navigate to `Tools > Global Options`. Here we can change everything from font size to theme, and how RStudio behaves. Click on "Appearance" to try out some different themes (my personal favorite is "Tomorrow Night").
+
+---
+
+## Programming in R with RStudio
+
+Let's start working with data and data visualization!  
+
+For this activity, we'll be working with the "Palmer Penguins" dataset, which was specifically designed for data science education. The dataset has been assembled into an R package. More info (and fun artwork!) on the palmerpenguins package can be found here: https://allisonhorst.github.io/palmerpenguins/index.html  
+
+We'll also use packages from the `tidyverse` suite, which is a "dialect" of R that can be more intuitive for non-programmers to learn. For that reason, it's widely used by biomedical researchers. More info on the tidyverse can be found here: https://www.tidyverse.org/  
+
+The packages have been pre-installed (so you don't need to run the below code), but the install commands are here for reference:
+
+```{r, eval=FALSE}
+
+install.packages("palmerpenguins")
+install.packages("tidyverse")
+
+```
+
+Packages only need to be installed once, but you'll need to load them each time you start an R session:
+
+```{r}
+
+library(palmerpenguins)
+library(tidyverse)
+
+```
+
+
+### Exploring the Data
+
+Let's start by checking out the descriptions of the package (`palmerpenguins`), and the actual dataset (`penguins`). You can run each of the below lines individually by highlighting the line and clicking the green arrow (or Ctrl/Cmd + Enter). Information will be displayed in the Help pane.
+
+```{r cars}
+
+?palmerpenguins
+
+?penguins
+
+```
+
+Next, we'll get a feel for the data in a few different ways. We can look at the first or last 6 rows of the data (run each line below individually):
+
+```{r}
+
+head(penguins)
+
+tail(penguins)
+
+```
+
+As an aside, you can also use the Help pane to look up information about functions (i.e. commands) and how to use them. The help can look a bit complicated, but it basically tells you what arguments (i.e. parameters) you need to give the function, and what (if any) the defaults are.
+
+```{r}
+?head
+```
+
+We can look at a preview of the data in our R Markdown document. It also tells you the size of the dataset (344 rows x 8 columns). Use the black arrow at the top to scroll through columns, and the "Previous/Next" at the bottom to scroll through rows.
+
+```{r}
+penguins
+```
+
+You can also see the entire dataset in a new tab in the Source pane using the `view()` function:
+
+```{r}
+view(penguins)
+```
+
+Finally, we can get a summary of the contents of the dataset. From all of this, we can see that this is a collection of measurements of 3 species of penguins on 3 different islands in Antarctica.
+
+```{r}
+summary(penguins)
+```
+
+### Visualizing the Data
+
+Another good way to get to know a dataset is to visualize it. We'll use the {ggplot} package, which is already loaded as part of the {tidyverse}. 
+
+We'll start with a simple bar chart that shows the number of penguins of each species. This is just to introduce you to what R code looks like - don't worry about fully understanding everything yet.  
+  
+I've left comments (indicated by hashtags) that explain what each line is doing. (Comments are also a great way to remind your future self of what your own code is doing!) Code is frequently broken up into separate lines for readability.
+
+```{r}
+
+ggplot(                     # use ggplot to
+  data = penguins,          # plot the penguins dataset
+       aes(x = species)     # with species on the x axis
+  ) +
+  geom_bar()                # in the format of a bar chart
+
+```
+
+Now, let's take the plot from above and break it down by island.
+
+```{r}
+
+ggplot(                     # use ggplot to
+  data = penguins,          # plot the penguins dataset
+       aes(x = species)     # with species on the x axis
+  ) +
+  geom_bar() +              # in the format of a bar chart
+  facet_wrap(~island)       # separated into one facet per island
+
+```
+
+So we can start to see a pattern - certain species of penguins only live on certain islands.
+
+Now let's make a plot with two variables: body mass vs. species. [See https://ggplot2.tidyverse.org/reference/geom_jitter.html for more info on jitter plots.]
+
+The warning tells us that there 2 rows with no data for body mass. Ideally you should clean up your data and filter those out (and figure out why those 2 penguins didn't have measurements), but we can ignore that for now.
+
+```{r}
+
+ggplot(                       # use ggplot to
+  data = penguins,            # plot the penguins dataset
+       aes(x = species,       # with species on the x axis
+           y = body_mass_g)   # and body mass on the y axis
+  ) +
+  geom_jitter(width = 0.2)    # in the format of a scatterplot
+
+```
+
+It looks like Gentoo penguins are the bigger species. Let's add a third variable: sex.
+
+```{r}
+
+ggplot(                       # use ggplot to
+  data = penguins,            # plot the penguins dataset
+       aes(x = species,       # with species on the x axis
+           y = body_mass_g,   # and body mass on the y axis
+           color = sex)       # and color the points by sex
+  ) +
+  geom_jitter(width = 0.2)    # in the format of a jitter plot
+
+```
+
+Now we can also see that males are generally larger than females.
+
+Finally, let's plot bill length vs. bill depth, by species, faceted by island, AND add a title and some axis labels!
+
+```{r}
+
+ggplot(
+  data = penguins,
+       aes(x = bill_length_mm,
+           y = bill_depth_mm,
+           color = species)
+  ) +
+  geom_point() +
+  facet_wrap(~island) +
+  ggtitle("Bill dimensions for 3 penguin species, by location") +
+  xlab("Bill length (mm)") +
+  ylab("Bill Depth (mm)")
+
+```
+
+We've only scratched the surface of the many cool things you can do with {ggplot}. Further reading, if you're interested:
+
+* Documentation: https://ggplot2.tidyverse.org/
+* Examples of plots: https://r-graph-gallery.com/
+* ggplot extensions (animations, etc.): https://exts.ggplot2.tidyverse.org/gallery/
+
+---
+
+## mini-DREAM Challenge
+
+This is a small preview of the challenge exercises that we'll include at the end of each activity. You'll be prompted to write some code and submit an answer to the challenge question. Your submission will get "scored" (or at least checked), and the results will be reported within a few minutes.
+
+**QUESTION:** What is Pierrette's birthday?
+
+Enter your best guess of Pierrette's birthday and age below, then run the code to store your answers as variables. Note that characters strings (like dates) must have quotes, but numbers do not.
+
+```{r}
+
+# format your guess as 'MM/DD'
+my_bday_guess <- "06/15"
+
+# just give a round number for this one
+my_age_guess <- 42
+
+```
+
+### Submitting the prediction
+
+You're now ready to submit! Before you submit for the first time, you must provide your Synapse Personal Access Token (PAT), which we use in place of username/password. Follow these steps to get a PAT:
+
+1. In your browser, navigate to https://www.synapse.org/#!PersonalAccessTokens:0
+  
+2. Click on the blue **Create New Token** button. 
+
+3. Under **Token Name**, provide a description such as "minidream". Under **Token Permissions**, check the boxes for **View** and **Modify** permissions.  
+
+4. Click **Create Token**. Upon generating, you will be given a token that is ONLY AVAILABLE FOR VIEWING ONCE. Copy the token, then paste it into `authToken` in the code chunk below.  
+  
+> Note: By using `rememberMe = TRUE` in the code below, you will not need to provide your credentials from this point forward.
+
+Once you copy over your PAT, go ahead and run the code chunk below.
+
+```{r eval=FALSE}
+library(synapser)
+synLogin(authToken = "paste_PAT_here",
+         rememberMe = TRUE,
+         silent = TRUE)
+submission <- submit_module_answers(module = 0)
+```
+
+If successful, a file with your prediction will be uploaded to Synapse and submitted to the challenge. You'll be able to see the results of your prediction on the miniDREAM scoreboard for this module: https://www.synapse.org/#!Synapse:syn51197448/wiki/621423  
+
+Congrats --- you've reached the end of **Module 0**! You can now return to the **mini-DREAM** Challenge site on Synapse. **Make sure to save your work before you leave!**
+
+---
