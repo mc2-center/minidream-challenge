@@ -210,7 +210,7 @@ def score(evaluation, dry_run=False):
                 for k, v 
                 in score.items() 
                 if k not in ["module", "userName", "team"]
-            ])
+            ])[:500]
             status.status = annots.annotate_submission(
                 syn,
                 submission.id,
