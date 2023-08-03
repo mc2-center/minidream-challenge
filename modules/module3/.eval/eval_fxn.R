@@ -1,83 +1,51 @@
 library(yaml)
-library(tidyverse)
-library(lubridate)
-library(glue)
+# library(tidyverse)
+# library(lubridate)
+# library(glue)
+
+check_answer <- function(pred, key) {
+  if (is.na(pred)) {
+    return ("Your guess is missing or NA.")
+  }
+  diff <- as.integer(pred) - as.integer(key)
+  if (diff < 0) {
+    return("Your guess was too small.")
+  } else if (diff > 0) {
+    return("Your guess was too big.")
+  } else {
+    return("Nailed it!")
+  }
+}
 
 
 score_submission <- function(submission_filename) {
   answers <- yaml.load_file(submission_filename)
-  
-  determinant_guess <- answers$determinant_n
-  dist_euclidean_guess <- round(answers$dist_euclidean, digits=0) # round to a whole number
-  dist_canberra_guess <- format(round(answers$dist_canberra, 2), nsmall = 2) #keep two digits
-  cluster1_guess <- answers$cluster1
-  cluster2_guess <- answers$cluster2
-  cluster3_guess <- answers$cluster3
 
+  PRpos_msg <- check_answer(answers$PRpos, key=177)
+  PRneg_msg <- check_answer(answers$PRneg, key=81)
+  PR_ER_neg_overlap_msg <- ifelse(
+    answers$PR_ER_neg_overlap == "YES",
+    "You're right, ",
+    "Not quite, "
+  )
+  PR_ER_pos_overlap_msg <- ifelse(
+    answers$PR_ER_pos_overlap == "YES",
+    "You're right, ",
+    "Not quite, "
+  )
+  cluster_msg <- check_answer(answers$cluster_number, key=3)
 
-  determinant_actual <- as.integer(0)
-  dist_euclidean_actual <- as.integer(219)
-  dist_canberra_actual <- as.numeric(1.92)
-
-  cluster1_actual <- as.integer(1)
-  cluster2_actual <- as.integer(2)
-  cluster3_actual <- as.integer(2)
-
-
-  if (determinant_guess == determinant_actual){
-    determinant_msg <- "Nailed it!"
-  } else {
-    determinant_msg <- "Your answer was incorrect"
-  }
-
-  if (dist_euclidean_guess == dist_euclidean_actual){
-    dist_euclidean_msg <- "Nailed it!"
-  } else {
-    dist_euclidean_msg <- "Your answer was incorrect"
-  }
-
-  if (dist_canberra_guess == dist_canberra_actual){
-    dist_canberra_msg <- "Nailed it!"
-  } else {
-    dist_canberra_msg <- "Your answer was incorrect"
-  }
-
-  if (is.null(cluster1_guess)){
-    cluster1_msg <- "No result submitted"
-  } else {
-      if (cluster1_guess == cluster1_actual){
-        cluster1_msg <- "Nailed it!"
-      } else {
-        cluster1_msg <- "Your answer was incorrect"
-      }
-  }
-
-  if (is.null(cluster2_guess)){
-    cluster2_msg <- "No result submitted"
-  } else {
-      if (cluster2_guess == cluster2_actual){
-        cluster2_msg <- "Nailed it!"
-      } else {
-        cluster2_msg <- "Your answer was incorrect"
-      }
-  }
-
-  if (is.null(cluster3_guess)){
-    cluster3_msg <- "No result submitted"
-  } else {
-      if (cluster3_guess == cluster3_actual){
-        cluster3_msg <- "Nailed it!"
-        } else {
-        cluster3_msg <- "Your answer was incorrect"
-        }
-  }
-
-  answers["determinant_msg"] <- determinant_msg
-  answers["dist_euclidean_msg"] <- dist_euclidean_msg
-  answers["dist_canberra_msg"] <- dist_canberra_msg
-  answers["cluster1_msg"] <- cluster1_msg
-  answers["cluster2_msg"] <- cluster2_msg
-  answers["cluster3_msg"] <- cluster3_msg
+  answers["PRpos_comment"] <- PRpos_msg
+  answers["PRneg_comment"] <- PRneg_msg
+  answers["PR_ER_neg_overlap_comment"] <- paste0(
+    PR_ER_neg_overlap_msg,
+    "there is an overlap in the clusters for ER- and PR-."
+  )
+  answers["PR_ER_pos_overlap_comment"] <- paste0(
+    PR_ER_pos_overlap_msg,
+    "there is an overlap in the clusters for ER+ and PR+."
+  )
+  answers["clusters_comment"] <- cluster_msg
 
   answers
 }
